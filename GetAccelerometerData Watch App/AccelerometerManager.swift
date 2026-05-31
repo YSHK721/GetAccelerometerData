@@ -224,54 +224,47 @@ class AccelerometerManager: NSObject, ObservableObject, WCSessionDelegate {
         let queue = OperationQueue()
         queue.qualityOfService = .userInitiated
         
-        motionManager.startDeviceMotionUpdates(to: queue) { [weak self] (motion, error) in
-            guard let self = self, let motion = motion else {
+        motionManager.startDeviceMotionUpdates(to: queue) { @Sendable [weak self] (motion, error) in
+            guard let motion = motion else {
                 if let error = error {
                     print("デバイスモーションエラー: \(error.localizedDescription)")
                 }
                 return
             }
-            
-            DispatchQueue.main.async {
-                // 加速度データ（重力を除いた加速度）
-                self.acceleration = (
-                    x: motion.userAcceleration.x,
-                    y: motion.userAcceleration.y,
-                    z: motion.userAcceleration.z
-                )
-                
-                // ジャイロスコープデータ（回転率）
-                self.gyroscope = (
-                    x: motion.rotationRate.x,
-                    y: motion.rotationRate.y,
-                    z: motion.rotationRate.z
-                )
 
+            // ISSUE-017: CoreMotion コールバックは背景 OperationQueue 上で呼ばれる。
+            // Swift 6 ランタイムは @MainActor 隔離された self への触れ方を厳格にチェックし、
+            // 背景キューで self を触ると _dispatch_assert_queue_fail でクラッシュする。
+            // Sendable な値だけを抽出してから MainActor へホップする。
+            let accelTuple = (x: motion.userAcceleration.x, y: motion.userAcceleration.y, z: motion.userAcceleration.z)
+            let gyroTuple = (x: motion.rotationRate.x, y: motion.rotationRate.y, z: motion.rotationRate.z)
+            let sampleTimestamp = motion.timestamp
+
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.acceleration = accelTuple
+                self.gyroscope = gyroTuple
                 self.accelerometerSampleCount += 1
                 self.gyroscopeSampleCount += 1
-                
+
                 // 記録中であればデータを保存
                 if self.isRecording {
-                    // motion.timestamp は systemUptime 基準のサンプル取得時刻。
-                    // bootTimeUnix を足して UNIX 時刻 (1970年基準) に変換する。
-                    // 同一 motion から取得した加速度・ジャイロには同一時刻を付与する。
-                    let timestamp = self.bootTimeUnix + motion.timestamp
+                    // motion.timestamp は systemUptime 基準。bootTimeUnix を足して UNIX 時刻に変換。
+                    let timestamp = self.bootTimeUnix + sampleTimestamp
 
-                    let accelRecord = AccelerometerRecord(
+                    self.accelerometerData.append(AccelerometerRecord(
                         timestamp: timestamp,
-                        x: motion.userAcceleration.x,
-                        y: motion.userAcceleration.y,
-                        z: motion.userAcceleration.z
-                    )
-                    self.accelerometerData.append(accelRecord)
+                        x: accelTuple.x,
+                        y: accelTuple.y,
+                        z: accelTuple.z
+                    ))
 
-                    let gyroRecord = GyroscopeRecord(
+                    self.gyroscopeData.append(GyroscopeRecord(
                         timestamp: timestamp,
-                        x: motion.rotationRate.x,
-                        y: motion.rotationRate.y,
-                        z: motion.rotationRate.z
-                    )
-                    self.gyroscopeData.append(gyroRecord)
+                        x: gyroTuple.x,
+                        y: gyroTuple.y,
+                        z: gyroTuple.z
+                    ))
                 }
             }
         }
@@ -287,28 +280,27 @@ class AccelerometerManager: NSObject, ObservableObject, WCSessionDelegate {
             let queue = OperationQueue()
             queue.qualityOfService = .userInitiated
             
-            motionManager.startAccelerometerUpdates(to: queue) { [weak self] (data, error) in
-                guard let self = self, let data = data else { return }
-                
-                DispatchQueue.main.async {
-                    self.acceleration = (
-                        x: data.acceleration.x,
-                        y: data.acceleration.y,
-                        z: data.acceleration.z
-                    )
+            motionManager.startAccelerometerUpdates(to: queue) { @Sendable [weak self] (data, error) in
+                guard let data = data else { return }
 
+                // ISSUE-017: 背景キューで self を触らない。Sendable 値を抽出してから MainActor へホップ。
+                let accelTuple = (x: data.acceleration.x, y: data.acceleration.y, z: data.acceleration.z)
+                let sampleTimestamp = data.timestamp
+
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    self.acceleration = accelTuple
                     self.accelerometerSampleCount += 1
 
                     if self.isRecording {
                         // data.timestamp は CMLogItem 由来で systemUptime 基準。
                         // bootTimeUnix を足して UNIX 時刻に変換する（DeviceMotion経路と同じ変換）。
-                        let record = AccelerometerRecord(
-                            timestamp: self.bootTimeUnix + data.timestamp,
-                            x: data.acceleration.x,
-                            y: data.acceleration.y,
-                            z: data.acceleration.z
-                        )
-                        self.accelerometerData.append(record)
+                        self.accelerometerData.append(AccelerometerRecord(
+                            timestamp: self.bootTimeUnix + sampleTimestamp,
+                            x: accelTuple.x,
+                            y: accelTuple.y,
+                            z: accelTuple.z
+                        ))
                     }
                 }
             }
@@ -325,28 +317,27 @@ class AccelerometerManager: NSObject, ObservableObject, WCSessionDelegate {
             let queue = OperationQueue()
             queue.qualityOfService = .userInitiated
             
-            motionManager.startGyroUpdates(to: queue) { [weak self] (data, error) in
-                guard let self = self, let data = data else { return }
-                
-                DispatchQueue.main.async {
-                    self.gyroscope = (
-                        x: data.rotationRate.x,
-                        y: data.rotationRate.y,
-                        z: data.rotationRate.z
-                    )
+            motionManager.startGyroUpdates(to: queue) { @Sendable [weak self] (data, error) in
+                guard let data = data else { return }
 
+                // ISSUE-017: 背景キューで self を触らない。Sendable 値を抽出してから MainActor へホップ。
+                let gyroTuple = (x: data.rotationRate.x, y: data.rotationRate.y, z: data.rotationRate.z)
+                let sampleTimestamp = data.timestamp
+
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    self.gyroscope = gyroTuple
                     self.gyroscopeSampleCount += 1
 
                     if self.isRecording {
                         // data.timestamp は CMLogItem 由来で systemUptime 基準。
                         // bootTimeUnix を足して UNIX 時刻に変換する（DeviceMotion経路と同じ変換）。
-                        let record = GyroscopeRecord(
-                            timestamp: self.bootTimeUnix + data.timestamp,
-                            x: data.rotationRate.x,
-                            y: data.rotationRate.y,
-                            z: data.rotationRate.z
-                        )
-                        self.gyroscopeData.append(record)
+                        self.gyroscopeData.append(GyroscopeRecord(
+                            timestamp: self.bootTimeUnix + sampleTimestamp,
+                            x: gyroTuple.x,
+                            y: gyroTuple.y,
+                            z: gyroTuple.z
+                        ))
                     }
                 }
             }
