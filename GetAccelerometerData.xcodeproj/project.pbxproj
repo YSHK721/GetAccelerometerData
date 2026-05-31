@@ -1,0 +1,1478 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		083B04EA2DB6D29D005D2FAF /* GetAccelerometerData Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 083B04E92DB6D29D005D2FAF /* GetAccelerometerData Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		08805D5D2DB6DBE20088F77E /* MyWatchApp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 08805D5C2DB6DBE20088F77E /* MyWatchApp Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DA00000000000001D0000005 /* SensorDataKit in Frameworks */ = {isa = PBXBuildFile; productRef = DA00000000000001C0000003 /* SensorDataKit */; };
+		DA00000000000001D0000006 /* SensorDataKit in Frameworks */ = {isa = PBXBuildFile; productRef = DA00000000000001C0000004 /* SensorDataKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		083B04D42DB6D29D005D2FAF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 083B04BE2DB6D29B005D2FAF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 083B04C52DB6D29B005D2FAF;
+			remoteInfo = GetAccelerometerData;
+		};
+		083B04DE2DB6D29D005D2FAF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 083B04BE2DB6D29B005D2FAF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 083B04C52DB6D29B005D2FAF;
+			remoteInfo = GetAccelerometerData;
+		};
+		083B04EB2DB6D29D005D2FAF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 083B04BE2DB6D29B005D2FAF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 083B04E82DB6D29D005D2FAF;
+			remoteInfo = "GetAccelerometerData Watch App";
+		};
+		083B04F92DB6D29E005D2FAF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 083B04BE2DB6D29B005D2FAF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 083B04E82DB6D29D005D2FAF;
+			remoteInfo = "GetAccelerometerData Watch App";
+		};
+		083B05032DB6D29E005D2FAF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 083B04BE2DB6D29B005D2FAF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 083B04E82DB6D29D005D2FAF;
+			remoteInfo = "GetAccelerometerData Watch App";
+		};
+		08805D5E2DB6DBE20088F77E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 083B04BE2DB6D29B005D2FAF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 08805D5B2DB6DBE20088F77E;
+			remoteInfo = "MyWatchApp Watch App";
+		};
+		08805D6C2DB6DBE30088F77E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 083B04BE2DB6D29B005D2FAF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 08805D5B2DB6DBE20088F77E;
+			remoteInfo = "MyWatchApp Watch App";
+		};
+		08805D762DB6DBE30088F77E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 083B04BE2DB6D29B005D2FAF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 08805D5B2DB6DBE20088F77E;
+			remoteInfo = "MyWatchApp Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		083B050F2DB6D29E005D2FAF /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				083B04EA2DB6D29D005D2FAF /* GetAccelerometerData Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D7F2DB6DBE30088F77E /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				08805D5D2DB6DBE20088F77E /* MyWatchApp Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		083B04C62DB6D29B005D2FAF /* GetAccelerometerData.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GetAccelerometerData.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		083B04D32DB6D29D005D2FAF /* GetAccelerometerDataTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GetAccelerometerDataTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		083B04DD2DB6D29D005D2FAF /* GetAccelerometerDataUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GetAccelerometerDataUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		083B04E92DB6D29D005D2FAF /* GetAccelerometerData Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GetAccelerometerData Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		083B04F82DB6D29E005D2FAF /* GetAccelerometerData Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "GetAccelerometerData Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		083B05022DB6D29E005D2FAF /* GetAccelerometerData Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "GetAccelerometerData Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		08805D572DB6DBE20088F77E /* MyWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		08805D5C2DB6DBE20088F77E /* MyWatchApp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MyWatchApp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		08805D6B2DB6DBE30088F77E /* MyWatchApp Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MyWatchApp Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		08805D752DB6DBE30088F77E /* MyWatchApp Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MyWatchApp Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA00000000000001A0000001 /* SensorDataKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SensorDataKit; path = Packages/SensorDataKit; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		081E68562DE1EDAF009B4423 /* Exceptions for "GetAccelerometerData" folder in "GetAccelerometerData" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 083B04C52DB6D29B005D2FAF /* GetAccelerometerData */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		0815BBA72DC5EAD30070C7EC /* GetAccelerometerData */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				081E68562DE1EDAF009B4423 /* Exceptions for "GetAccelerometerData" folder in "GetAccelerometerData" target */,
+			);
+			path = GetAccelerometerData;
+			sourceTree = "<group>";
+		};
+		083B04D62DB6D29D005D2FAF /* GetAccelerometerDataTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GetAccelerometerDataTests;
+			sourceTree = "<group>";
+		};
+		083B04E02DB6D29D005D2FAF /* GetAccelerometerDataUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GetAccelerometerDataUITests;
+			sourceTree = "<group>";
+		};
+		083B04ED2DB6D29D005D2FAF /* GetAccelerometerData Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "GetAccelerometerData Watch App";
+			sourceTree = "<group>";
+		};
+		083B04FB2DB6D29E005D2FAF /* GetAccelerometerData Watch AppTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "GetAccelerometerData Watch AppTests";
+			sourceTree = "<group>";
+		};
+		083B05052DB6D29E005D2FAF /* GetAccelerometerData Watch AppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "GetAccelerometerData Watch AppUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		083B04C32DB6D29B005D2FAF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA00000000000001D0000005 /* SensorDataKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04D02DB6D29D005D2FAF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04DA2DB6D29D005D2FAF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04E62DB6D29D005D2FAF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA00000000000001D0000006 /* SensorDataKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04F52DB6D29E005D2FAF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04FF2DB6D29E005D2FAF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D592DB6DBE20088F77E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D682DB6DBE30088F77E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D722DB6DBE30088F77E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		083B04BD2DB6D29B005D2FAF = {
+			isa = PBXGroup;
+			children = (
+				DA00000000000001A0000001 /* SensorDataKit */,
+				083B04D62DB6D29D005D2FAF /* GetAccelerometerDataTests */,
+				083B04E02DB6D29D005D2FAF /* GetAccelerometerDataUITests */,
+				083B04ED2DB6D29D005D2FAF /* GetAccelerometerData Watch App */,
+				083B04FB2DB6D29E005D2FAF /* GetAccelerometerData Watch AppTests */,
+				083B05052DB6D29E005D2FAF /* GetAccelerometerData Watch AppUITests */,
+				083B04C72DB6D29B005D2FAF /* Products */,
+				0815BBA72DC5EAD30070C7EC /* GetAccelerometerData */,
+			);
+			sourceTree = "<group>";
+		};
+		083B04C72DB6D29B005D2FAF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				083B04C62DB6D29B005D2FAF /* GetAccelerometerData.app */,
+				083B04D32DB6D29D005D2FAF /* GetAccelerometerDataTests.xctest */,
+				083B04DD2DB6D29D005D2FAF /* GetAccelerometerDataUITests.xctest */,
+				083B04E92DB6D29D005D2FAF /* GetAccelerometerData Watch App.app */,
+				083B04F82DB6D29E005D2FAF /* GetAccelerometerData Watch AppTests.xctest */,
+				083B05022DB6D29E005D2FAF /* GetAccelerometerData Watch AppUITests.xctest */,
+				08805D572DB6DBE20088F77E /* MyWatchApp.app */,
+				08805D5C2DB6DBE20088F77E /* MyWatchApp Watch App.app */,
+				08805D6B2DB6DBE30088F77E /* MyWatchApp Watch AppTests.xctest */,
+				08805D752DB6DBE30088F77E /* MyWatchApp Watch AppUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		083B04C52DB6D29B005D2FAF /* GetAccelerometerData */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 083B05102DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerData" */;
+			buildPhases = (
+				083B04C22DB6D29B005D2FAF /* Sources */,
+				083B04C32DB6D29B005D2FAF /* Frameworks */,
+				083B04C42DB6D29B005D2FAF /* Resources */,
+				083B050F2DB6D29E005D2FAF /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				083B04EC2DB6D29D005D2FAF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				0815BBA72DC5EAD30070C7EC /* GetAccelerometerData */,
+			);
+			name = GetAccelerometerData;
+			packageProductDependencies = (
+				DA00000000000001C0000003 /* SensorDataKit */,
+			);
+			productName = GetAccelerometerData;
+			productReference = 083B04C62DB6D29B005D2FAF /* GetAccelerometerData.app */;
+			productType = "com.apple.product-type.application";
+		};
+		083B04D22DB6D29D005D2FAF /* GetAccelerometerDataTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 083B05132DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerDataTests" */;
+			buildPhases = (
+				083B04CF2DB6D29D005D2FAF /* Sources */,
+				083B04D02DB6D29D005D2FAF /* Frameworks */,
+				083B04D12DB6D29D005D2FAF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				083B04D52DB6D29D005D2FAF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				083B04D62DB6D29D005D2FAF /* GetAccelerometerDataTests */,
+			);
+			name = GetAccelerometerDataTests;
+			packageProductDependencies = (
+			);
+			productName = GetAccelerometerDataTests;
+			productReference = 083B04D32DB6D29D005D2FAF /* GetAccelerometerDataTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		083B04DC2DB6D29D005D2FAF /* GetAccelerometerDataUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 083B05162DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerDataUITests" */;
+			buildPhases = (
+				083B04D92DB6D29D005D2FAF /* Sources */,
+				083B04DA2DB6D29D005D2FAF /* Frameworks */,
+				083B04DB2DB6D29D005D2FAF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				083B04DF2DB6D29D005D2FAF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				083B04E02DB6D29D005D2FAF /* GetAccelerometerDataUITests */,
+			);
+			name = GetAccelerometerDataUITests;
+			packageProductDependencies = (
+			);
+			productName = GetAccelerometerDataUITests;
+			productReference = 083B04DD2DB6D29D005D2FAF /* GetAccelerometerDataUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		083B04E82DB6D29D005D2FAF /* GetAccelerometerData Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 083B050C2DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerData Watch App" */;
+			buildPhases = (
+				083B04E52DB6D29D005D2FAF /* Sources */,
+				083B04E62DB6D29D005D2FAF /* Frameworks */,
+				083B04E72DB6D29D005D2FAF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				083B04ED2DB6D29D005D2FAF /* GetAccelerometerData Watch App */,
+			);
+			name = "GetAccelerometerData Watch App";
+			packageProductDependencies = (
+				DA00000000000001C0000004 /* SensorDataKit */,
+			);
+			productName = "GetAccelerometerData Watch App";
+			productReference = 083B04E92DB6D29D005D2FAF /* GetAccelerometerData Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		083B04F72DB6D29E005D2FAF /* GetAccelerometerData Watch AppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 083B05192DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerData Watch AppTests" */;
+			buildPhases = (
+				083B04F42DB6D29E005D2FAF /* Sources */,
+				083B04F52DB6D29E005D2FAF /* Frameworks */,
+				083B04F62DB6D29E005D2FAF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				083B04FA2DB6D29E005D2FAF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				083B04FB2DB6D29E005D2FAF /* GetAccelerometerData Watch AppTests */,
+			);
+			name = "GetAccelerometerData Watch AppTests";
+			packageProductDependencies = (
+			);
+			productName = "GetAccelerometerData Watch AppTests";
+			productReference = 083B04F82DB6D29E005D2FAF /* GetAccelerometerData Watch AppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		083B05012DB6D29E005D2FAF /* GetAccelerometerData Watch AppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 083B051C2DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerData Watch AppUITests" */;
+			buildPhases = (
+				083B04FE2DB6D29E005D2FAF /* Sources */,
+				083B04FF2DB6D29E005D2FAF /* Frameworks */,
+				083B05002DB6D29E005D2FAF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				083B05042DB6D29E005D2FAF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				083B05052DB6D29E005D2FAF /* GetAccelerometerData Watch AppUITests */,
+			);
+			name = "GetAccelerometerData Watch AppUITests";
+			packageProductDependencies = (
+			);
+			productName = "GetAccelerometerData Watch AppUITests";
+			productReference = 083B05022DB6D29E005D2FAF /* GetAccelerometerData Watch AppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		08805D562DB6DBE20088F77E /* MyWatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 08805D872DB6DBE30088F77E /* Build configuration list for PBXNativeTarget "MyWatchApp" */;
+			buildPhases = (
+				08805D552DB6DBE20088F77E /* Resources */,
+				08805D7F2DB6DBE30088F77E /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				08805D5F2DB6DBE20088F77E /* PBXTargetDependency */,
+			);
+			name = MyWatchApp;
+			packageProductDependencies = (
+			);
+			productName = MyWatchApp;
+			productReference = 08805D572DB6DBE20088F77E /* MyWatchApp.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		08805D5B2DB6DBE20088F77E /* MyWatchApp Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 08805D862DB6DBE30088F77E /* Build configuration list for PBXNativeTarget "MyWatchApp Watch App" */;
+			buildPhases = (
+				08805D582DB6DBE20088F77E /* Sources */,
+				08805D592DB6DBE20088F77E /* Frameworks */,
+				08805D5A2DB6DBE20088F77E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "MyWatchApp Watch App";
+			packageProductDependencies = (
+			);
+			productName = "MyWatchApp Watch App";
+			productReference = 08805D5C2DB6DBE20088F77E /* MyWatchApp Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		08805D6A2DB6DBE30088F77E /* MyWatchApp Watch AppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 08805D882DB6DBE30088F77E /* Build configuration list for PBXNativeTarget "MyWatchApp Watch AppTests" */;
+			buildPhases = (
+				08805D672DB6DBE30088F77E /* Sources */,
+				08805D682DB6DBE30088F77E /* Frameworks */,
+				08805D692DB6DBE30088F77E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				08805D6D2DB6DBE30088F77E /* PBXTargetDependency */,
+			);
+			name = "MyWatchApp Watch AppTests";
+			packageProductDependencies = (
+			);
+			productName = "MyWatchApp Watch AppTests";
+			productReference = 08805D6B2DB6DBE30088F77E /* MyWatchApp Watch AppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		08805D742DB6DBE30088F77E /* MyWatchApp Watch AppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 08805D892DB6DBE30088F77E /* Build configuration list for PBXNativeTarget "MyWatchApp Watch AppUITests" */;
+			buildPhases = (
+				08805D712DB6DBE30088F77E /* Sources */,
+				08805D722DB6DBE30088F77E /* Frameworks */,
+				08805D732DB6DBE30088F77E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				08805D772DB6DBE30088F77E /* PBXTargetDependency */,
+			);
+			name = "MyWatchApp Watch AppUITests";
+			packageProductDependencies = (
+			);
+			productName = "MyWatchApp Watch AppUITests";
+			productReference = 08805D752DB6DBE30088F77E /* MyWatchApp Watch AppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		083B04BE2DB6D29B005D2FAF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					083B04C52DB6D29B005D2FAF = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					083B04D22DB6D29D005D2FAF = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 083B04C52DB6D29B005D2FAF;
+					};
+					083B04DC2DB6D29D005D2FAF = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 083B04C52DB6D29B005D2FAF;
+					};
+					083B04E82DB6D29D005D2FAF = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					083B04F72DB6D29E005D2FAF = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 083B04E82DB6D29D005D2FAF;
+					};
+					083B05012DB6D29E005D2FAF = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 083B04E82DB6D29D005D2FAF;
+					};
+					08805D562DB6DBE20088F77E = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					08805D5B2DB6DBE20088F77E = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					08805D6A2DB6DBE30088F77E = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 08805D5B2DB6DBE20088F77E;
+					};
+					08805D742DB6DBE30088F77E = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 08805D5B2DB6DBE20088F77E;
+					};
+				};
+			};
+			buildConfigurationList = 083B04C12DB6D29B005D2FAF /* Build configuration list for PBXProject "GetAccelerometerData" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 083B04BD2DB6D29B005D2FAF;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DA00000000000001B0000002 /* XCLocalSwiftPackageReference "Packages/SensorDataKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 083B04C72DB6D29B005D2FAF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				083B04C52DB6D29B005D2FAF /* GetAccelerometerData */,
+				083B04D22DB6D29D005D2FAF /* GetAccelerometerDataTests */,
+				083B04DC2DB6D29D005D2FAF /* GetAccelerometerDataUITests */,
+				083B04E82DB6D29D005D2FAF /* GetAccelerometerData Watch App */,
+				083B04F72DB6D29E005D2FAF /* GetAccelerometerData Watch AppTests */,
+				083B05012DB6D29E005D2FAF /* GetAccelerometerData Watch AppUITests */,
+				08805D562DB6DBE20088F77E /* MyWatchApp */,
+				08805D5B2DB6DBE20088F77E /* MyWatchApp Watch App */,
+				08805D6A2DB6DBE30088F77E /* MyWatchApp Watch AppTests */,
+				08805D742DB6DBE30088F77E /* MyWatchApp Watch AppUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		083B04C42DB6D29B005D2FAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04D12DB6D29D005D2FAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04DB2DB6D29D005D2FAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04E72DB6D29D005D2FAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04F62DB6D29E005D2FAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B05002DB6D29E005D2FAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D552DB6DBE20088F77E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D5A2DB6DBE20088F77E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D692DB6DBE30088F77E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D732DB6DBE30088F77E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		083B04C22DB6D29B005D2FAF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04CF2DB6D29D005D2FAF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04D92DB6D29D005D2FAF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04E52DB6D29D005D2FAF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04F42DB6D29E005D2FAF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		083B04FE2DB6D29E005D2FAF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D582DB6DBE20088F77E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D672DB6DBE30088F77E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		08805D712DB6DBE30088F77E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		083B04D52DB6D29D005D2FAF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 083B04C52DB6D29B005D2FAF /* GetAccelerometerData */;
+			targetProxy = 083B04D42DB6D29D005D2FAF /* PBXContainerItemProxy */;
+		};
+		083B04DF2DB6D29D005D2FAF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 083B04C52DB6D29B005D2FAF /* GetAccelerometerData */;
+			targetProxy = 083B04DE2DB6D29D005D2FAF /* PBXContainerItemProxy */;
+		};
+		083B04EC2DB6D29D005D2FAF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 083B04E82DB6D29D005D2FAF /* GetAccelerometerData Watch App */;
+			targetProxy = 083B04EB2DB6D29D005D2FAF /* PBXContainerItemProxy */;
+		};
+		083B04FA2DB6D29E005D2FAF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 083B04E82DB6D29D005D2FAF /* GetAccelerometerData Watch App */;
+			targetProxy = 083B04F92DB6D29E005D2FAF /* PBXContainerItemProxy */;
+		};
+		083B05042DB6D29E005D2FAF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 083B04E82DB6D29D005D2FAF /* GetAccelerometerData Watch App */;
+			targetProxy = 083B05032DB6D29E005D2FAF /* PBXContainerItemProxy */;
+		};
+		08805D5F2DB6DBE20088F77E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 08805D5B2DB6DBE20088F77E /* MyWatchApp Watch App */;
+			targetProxy = 08805D5E2DB6DBE20088F77E /* PBXContainerItemProxy */;
+		};
+		08805D6D2DB6DBE30088F77E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 08805D5B2DB6DBE20088F77E /* MyWatchApp Watch App */;
+			targetProxy = 08805D6C2DB6DBE30088F77E /* PBXContainerItemProxy */;
+		};
+		08805D772DB6DBE30088F77E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 08805D5B2DB6DBE20088F77E /* MyWatchApp Watch App */;
+			targetProxy = 08805D762DB6DBE30088F77E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		083B050A2DB6D29E005D2FAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		083B050B2DB6D29E005D2FAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = CN728VXK52;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		083B050D2DB6D29E005D2FAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "GetAccelerometerData Watch App/GetAccelerometerData Watch App.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=watchos*]" = CN728VXK52;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "GetAccelerometerData-Watch-App-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = GetAccelerometerData;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
+				INFOPLIST_KEY_NSMotionUsageDescription = "加速度データとジャイロスコープデータを取得してワークアウトの動きを分析するために使用します";
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = healthkit;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = yshk721.DEV;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=watchos*]" = Watch_Dev_Profile;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Debug;
+		};
+		083B050E2DB6D29E005D2FAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "GetAccelerometerData Watch App/GetAccelerometerData Watch App.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=watchos*]" = CN728VXK52;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "GetAccelerometerData-Watch-App-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = GetAccelerometerData;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
+				INFOPLIST_KEY_NSMotionUsageDescription = "加速度データとジャイロスコープデータを取得してワークアウトの動きを分析するために使用します";
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = healthkit;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = yshk721.DEV;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=watchos*]" = Watch_Dev_Profile;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Release;
+		};
+		083B05112DB6D29E005D2FAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GetAccelerometerData/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GetAccelerometerData;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
+				INFOPLIST_KEY_NSMotionUsageDescription = "加速度データとジャイロスコープデータを取得してワークアウトの動きを分析するために使用します";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = healthkit;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		083B05122DB6D29E005D2FAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GetAccelerometerData/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = GetAccelerometerData;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
+				INFOPLIST_KEY_NSMotionUsageDescription = "加速度データとジャイロスコープデータを取得してワークアウトの動きを分析するために使用します";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = healthkit;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		083B05142DB6D29E005D2FAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.xctrunner;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GetAccelerometerData.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GetAccelerometerData";
+			};
+			name = Debug;
+		};
+		083B05152DB6D29E005D2FAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.xctrunner;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GetAccelerometerData.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GetAccelerometerData";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		083B05172DB6D29E005D2FAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.xctrunner;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GetAccelerometerData;
+			};
+			name = Debug;
+		};
+		083B05182DB6D29E005D2FAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.xctrunner;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GetAccelerometerData;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		083B051A2DB6D29E005D2FAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.xctrunner;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GetAccelerometerData Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GetAccelerometerData Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Debug;
+		};
+		083B051B2DB6D29E005D2FAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.xctrunner;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GetAccelerometerData Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GetAccelerometerData Watch App";
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Release;
+		};
+		083B051D2DB6D29E005D2FAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.xctrunner;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "GetAccelerometerData Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Debug;
+		};
+		083B051E2DB6D29E005D2FAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk721.DEV.xctrunner;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "GetAccelerometerData Watch App";
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Release;
+		};
+		08805D7D2DB6DBE30088F77E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_KEY_CFBundleDisplayName = MyWatchApp;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk.721.MyWatchApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		08805D7E2DB6DBE30088F77E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_KEY_CFBundleDisplayName = MyWatchApp;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk.721.MyWatchApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		08805D802DB6DBE30088F77E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MyWatchApp;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk.721.MyWatchApp.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Debug;
+		};
+		08805D812DB6DBE30088F77E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MyWatchApp;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yshk.721.MyWatchApp.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Release;
+		};
+		08805D822DB6DBE30088F77E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "yshk.721.MyWatchApp-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MyWatchApp Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MyWatchApp Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Debug;
+		};
+		08805D832DB6DBE30088F77E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "yshk.721.MyWatchApp-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MyWatchApp Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MyWatchApp Watch App";
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Release;
+		};
+		08805D842DB6DBE30088F77E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "yshk.721.MyWatchApp-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "MyWatchApp Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Debug;
+		};
+		08805D852DB6DBE30088F77E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CN728VXK52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "yshk.721.MyWatchApp-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "MyWatchApp Watch App";
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		083B04C12DB6D29B005D2FAF /* Build configuration list for PBXProject "GetAccelerometerData" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				083B050A2DB6D29E005D2FAF /* Debug */,
+				083B050B2DB6D29E005D2FAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		083B050C2DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerData Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				083B050D2DB6D29E005D2FAF /* Debug */,
+				083B050E2DB6D29E005D2FAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		083B05102DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerData" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				083B05112DB6D29E005D2FAF /* Debug */,
+				083B05122DB6D29E005D2FAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		083B05132DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerDataTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				083B05142DB6D29E005D2FAF /* Debug */,
+				083B05152DB6D29E005D2FAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		083B05162DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerDataUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				083B05172DB6D29E005D2FAF /* Debug */,
+				083B05182DB6D29E005D2FAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		083B05192DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerData Watch AppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				083B051A2DB6D29E005D2FAF /* Debug */,
+				083B051B2DB6D29E005D2FAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		083B051C2DB6D29E005D2FAF /* Build configuration list for PBXNativeTarget "GetAccelerometerData Watch AppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				083B051D2DB6D29E005D2FAF /* Debug */,
+				083B051E2DB6D29E005D2FAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		08805D862DB6DBE30088F77E /* Build configuration list for PBXNativeTarget "MyWatchApp Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08805D802DB6DBE30088F77E /* Debug */,
+				08805D812DB6DBE30088F77E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		08805D872DB6DBE30088F77E /* Build configuration list for PBXNativeTarget "MyWatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08805D7D2DB6DBE30088F77E /* Debug */,
+				08805D7E2DB6DBE30088F77E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		08805D882DB6DBE30088F77E /* Build configuration list for PBXNativeTarget "MyWatchApp Watch AppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08805D822DB6DBE30088F77E /* Debug */,
+				08805D832DB6DBE30088F77E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		08805D892DB6DBE30088F77E /* Build configuration list for PBXNativeTarget "MyWatchApp Watch AppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08805D842DB6DBE30088F77E /* Debug */,
+				08805D852DB6DBE30088F77E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		DA00000000000001B0000002 /* XCLocalSwiftPackageReference "Packages/SensorDataKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SensorDataKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DA00000000000001C0000003 /* SensorDataKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SensorDataKit;
+		};
+		DA00000000000001C0000004 /* SensorDataKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SensorDataKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 083B04BE2DB6D29B005D2FAF /* Project object */;
+}
