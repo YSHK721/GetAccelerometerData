@@ -1,0 +1,10 @@
+# Ignore everything except .claude directory
+*
+!.gitignore
+!.claude/
+!.claude/**
+
+# Exclude within .claude
+.claude/**/.DS_Store
+.claude/.DS_Store
+.claude/settings.local.json
