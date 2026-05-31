@@ -1,10 +1,53 @@
-# Ignore everything except .claude directory
-*
-!.gitignore
-!.claude/
-!.claude/**
+# =============================================================================
+# GetAccelerometerData — Xcode + Swift Package (iOS / watchOS) .gitignore
+# =============================================================================
 
-# Exclude within .claude
+# ---- macOS metadata ----
+.DS_Store
+**/.DS_Store
+
+# ---- Xcode user data (per-developer state) ----
+**/xcuserdata/
+**/*.xcuserstate
+**/*.xcuserdatad/
+**/UserInterfaceState.xcuserstate
+**/IDEWorkspaceChecks.plist
+**/WorkspaceSettings.xcsettings
+
+# ---- Xcode build output ----
+build/
+DerivedData/
+**/DerivedData/
+*.xcresult/
+**/*.xcresult
+*.hmap
+*.ipa
+*.dSYM/
+*.dSYM.zip
+
+# ---- Swift Package Manager ----
+.build/
+**/.build/
+.swiftpm/
+**/.swiftpm/
+Packages/*/.build/
+Packages/*/Package.resolved
+
+# ---- xcode-build-server / SourceKit-LSP cache ----
+buildServer.json
+.bsp/
+
+# ---- Editor / tooling cache（プロジェクトローカル） ----
+.serena/
+
+# ---- 一時的な作業ノート（必要に応じて track する場合は除外を解除） ----
+.docs/
+
+# ---- バックアップファイル ----
+*.bak
+*.bak.*
+
+# ---- Claude Code local settings（共有しないユーザ設定） ----
 .claude/**/.DS_Store
 .claude/.DS_Store
 .claude/settings.local.json
