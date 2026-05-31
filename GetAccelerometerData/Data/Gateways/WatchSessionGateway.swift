@@ -20,8 +20,25 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     @Published var receivedDataFiles: [URL] = []
 
     private var fileReceivedDates: [String: Date] = [:]
-    // メタデータの受信（ファイル名など）
-    private var lastReceivedMetadata: [String: String] = [:]
+
+    // メタデータの受信（ファイル名など）。WCSession デリゲートはバックグラウンドキューから
+    // コールバックされるため、MainActor 隔離プロパティへの直接アクセスは
+    // `_dispatch_assert_queue_fail` を起こす。NSLock 保護下の `nonisolated(unsafe)` 変数で
+    // 同期アクセスを実現し、ISSUE-016 残課題 (b) を解消する。
+    private let metadataLock = NSLock()
+    nonisolated(unsafe) private var _lastReceivedMetadata: [String: String] = [:]
+
+    nonisolated private func readMetadata() -> [String: String] {
+        metadataLock.lock()
+        defer { metadataLock.unlock() }
+        return _lastReceivedMetadata
+    }
+
+    nonisolated private func writeMetadata(_ value: [String: String]) {
+        metadataLock.lock()
+        defer { metadataLock.unlock() }
+        _lastReceivedMetadata = value
+    }
 
     var allReceivedFiles: [URL] {
         let combined = receivedFiles + receivedDataFiles
@@ -141,14 +158,11 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     
     // 即時転送のメタデータ受信
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
-        // メタデータを保存
+        // メタデータを保存（nonisolated + NSLock 保護で同期書き込み）
         if let transferType = message["transferType"] as? String, transferType == "immediate" {
-            let fileName = message["fileName"] as? String
-            Task { @MainActor in
-                var captured: [String: String] = ["transferType": "immediate"]
-                if let fileName { captured["fileName"] = fileName }
-                self.lastReceivedMetadata = captured
-            }
+            var captured: [String: String] = ["transferType": "immediate"]
+            if let fileName = message["fileName"] as? String { captured["fileName"] = fileName }
+            writeMetadata(captured)
             print("Watch から受信準備完了: \(message)")
         }
 
@@ -158,8 +172,8 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
 
     // 即時転送のデータ受信
     nonisolated func session(_ session: WCSession, didReceiveMessageData messageData: Data, replyHandler: @escaping (Data) -> Void) {
-        // 最後に受信したメタデータからファイル名を取得
-        let metadata = MainActor.assumeIsolated { self.lastReceivedMetadata }
+        // 最後に受信したメタデータからファイル名を取得（nonisolated + NSLock 保護の同期読み出し）
+        let metadata = readMetadata()
         if let fileName = metadata["fileName"] {
             do {
                 // JSONデータをデコード（CombinedSensorData配列として）
