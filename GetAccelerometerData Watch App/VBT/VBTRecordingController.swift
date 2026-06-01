@@ -93,6 +93,10 @@ final class VBTRecordingController: ObservableObject {
         guard case .recording = uiState else { return }
         uiState = .stopping
         stopReachabilityTimer()
+        // 仕様書 §7 meta.json 用に IMU 開始時刻を gateway 経由で iPhone へ運ぶ。
+        if let imuStart = useCase.imuStartTimestamp {
+            gateway.setImuStartTimestamp(imuStart)
+        }
         let result = await useCase.stop()
         switch result {
         case .completed:

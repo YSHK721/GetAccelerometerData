@@ -314,14 +314,13 @@
 ## ISSUE-018
 
 - **発生日**: 2026-06-01
+- **解決日**: 2026-06-01
 - **タイトル**: VBT Phase A の WCSession delegate 競合（transferFile ACK ブリッジ未配線）
 - **重大度**: Middle
-- **ステータス**: OPEN
+- **ステータス**: RESOLVED
 - **発生工程**: VBT Ground Truth Tool Phase A 実装
 - **概要**: `WCSessionVBTGateway.transferIMUFile(at:timeout:)` は `WCSessionDelegate.session(_:didFinish:error:)` の発火を期待して `notifyTransferDidFinish(error:)` を経由した `CheckedContinuation` 再開を行う設計だが、`WCSession.default.delegate` は既存 `AccelerometerManager` が保持しており、Phase A 単体では gateway へのブリッジが配線されていない。結果として `transferIMUFile` の `await` は 60s タイムアウトまで待たされる（仕様書 §9 「IMU 転送タイムアウト」異常系で `transferTimeout` が誤発火する可能性）。
 - **影響範囲**: VBTRecordingController → VBTRecordingUseCase → WCSessionVBTGateway の停止フロー。Phase A 単体実機テストで 60s タイムアウトが発生する見込み。
-- **回避策（Phase A 動作確認用）**:
-  1. `AccelerometerManager.session(_:didFinish:error:)` から `WCSessionVBTGateway.notifyTransferDidFinish` を呼ぶブリッジ追加（Phase B 着手時に対応推奨）
-  2. または、`WCSessionVBTGateway` を独立した WCSessionDelegate として登録し、既存 `AccelerometerManager.session.delegate = self` と排他化（要設計判断）
-- **対策方針**: Phase B（iPhone 側 AVFoundation 録画）着手時に、iPhone 側 `WatchSessionManager` と Watch 側 `WCSessionVBTGateway` を `VBT.startRecordingMessage` / `vbt.imuCSV` 専用に router 化し、既存 `AccelerometerManager` の汎用転送経路と分離する。
-- **検証手段**: Phase B 着手時に統合テスト（実機 Pair）で stop → ACK → completed 経路を計測。
+- **実施内容**: (1) Watch 側に `VBTGatewayRegistry`（`@unchecked Sendable` シングルトン）を新設し、`WCSessionVBTGateway` がインスタンス生成時に self-register / `deinit` で unregister する仕組みを導入。(2) 既存 `AccelerometerManager.session(_:didFinish:error:)` から `VBTGatewayRegistry.isVBTTransfer(_:)` で metadata.fileType == "vbt.imuCSV" を判定し、VBT 経路なら `VBTGatewayRegistry.shared.bridgeDidFinish(...)` 経由で `WCSessionVBTGateway.notifyTransferDidFinish` を呼ぶ。(3) iPhone 側 `WatchSessionGateway` に `VBTWatchMessageRouter` を新設し、`vbt.startRecording` / `vbt.stopRecording` / `vbt.imuCSV` を専用ルーターへ振分け、既存転送経路（CombinedSensorData JSON / 汎用 CSV）と排他化。(4) iPhone → Watch の最終 ACK は `["status": "ack"]` の sendMessage を新設し、Watch 側 `AccelerometerManager.session(_:didReceiveMessage:)` から `VBTGatewayRegistry.shared.bridgeAckMessage(_:)` 経由で `WCSessionVBTGateway.notifyTransferAck()` を呼ぶ。(5) `notifyTransferDidFinish(error:)` は「中間通知（エラー時のみ continuation 解決、成功時は ACK 待機）」へ意味を更新し、`notifyTransferAck` / `notifyTransferFailure` を新設して仕様書 §6 step 12 の真の ACK と整合させる。(6) Watch 側 `VBTRecordingController.tapStopRecording()` で `useCase.imuStartTimestamp` を `gateway.setImuStartTimestamp(_:)` 経由で metadata に注入し、iPhone 側 meta.json の `imu_start_timestamp` を仕様書 §7 通りに伝達する。
+- **検証結果**: iOS / watchOS 両ターゲット clean build SUCCEEDED（Xcode 26.5 / iPhone 17 シミュレータ + Apple Watch Series 11 シミュレータ）。SensorDataKit 全 89 テスト pass（追加 `VBTReceptionUseCaseTests` / `MetaJSONPayloadTests` / `SessionFolderNamingTests` / `VBTSessionInputTests` 含む）。
+- **残課題**: 実機ペアでの統合検証（特に 60fps セットアップの実機モデル別動作確認）は Phase B 受領者責務として残置。

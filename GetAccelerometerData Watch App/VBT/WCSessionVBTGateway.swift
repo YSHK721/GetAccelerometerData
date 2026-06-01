@@ -24,11 +24,33 @@ final class WCSessionVBTGateway: NSObject, WatchConnectivityVBTPort, @unchecked 
     static let startMessageKey = "vbt.startRecording"
     static let stopMessageKey = "vbt.stopRecording"
     static let transferFileType = "vbt.imuCSV"
+    /// ISSUE-018 ブリッジ: iPhone 側でファイル受信時に取得する IMU 開始時刻のメタデータキー。
+    static let imuStartTimestampKey = "imu_start_timestamp"
+
+    /// Watch 側 IMU 開始時刻（仕様書 §7 meta.json 用）。transferIMUFile 呼び出し時にメタデータへ載せる。
+    /// VBTRecordingController から `setImuStartTimestamp(_:)` 経由で注入される。
+    private(set) var imuStartTimestamp: TimeInterval?
 
     private let lock = NSLock()
     private var pendingStartContinuation: CheckedContinuation<StartRecordingAck, Never>?
     private var pendingTransferContinuation: CheckedContinuation<TransferAck, Never>?
     private var session: WCSession? { WCSession.isSupported() ? WCSession.default : nil }
+
+    override init() {
+        super.init()
+        // ISSUE-018: 既存 AccelerometerManager の WCSessionDelegate を借用しブリッジ。
+        VBTGatewayRegistry.shared.register(self)
+    }
+
+    deinit {
+        VBTGatewayRegistry.shared.unregister(self)
+    }
+
+    /// Use Case から `imuStartTimestamp` を共有する（transferFile metadata 用）。
+    func setImuStartTimestamp(_ timestamp: TimeInterval) {
+        lock.lock(); defer { lock.unlock() }
+        imuStartTimestamp = timestamp
+    }
 
     var isReachable: Bool {
         return session?.isReachable ?? false
@@ -90,13 +112,17 @@ final class WCSessionVBTGateway: NSObject, WatchConnectivityVBTPort, @unchecked 
         return await withCheckedContinuation { (continuation: CheckedContinuation<TransferAck, Never>) in
             lock.lock()
             pendingTransferContinuation = continuation
+            let imuTs = imuStartTimestamp
             lock.unlock()
 
-            let metadata: [String: Any] = [
+            var metadata: [String: Any] = [
                 "fileType": Self.transferFileType,
                 "fileName": url.lastPathComponent,
                 "sentAt": Date().timeIntervalSince1970
             ]
+            if let imuTs = imuTs {
+                metadata[Self.imuStartTimestampKey] = imuTs
+            }
             _ = session.transferFile(url, metadata: metadata)
 
             // タイムアウトタスク
@@ -107,15 +133,29 @@ final class WCSessionVBTGateway: NSObject, WatchConnectivityVBTPort, @unchecked 
         }
     }
 
-    // MARK: - Bridge from WCSessionDelegate (called by AccelerometerManager or similar)
+    // MARK: - Bridge from WCSessionDelegate (called by AccelerometerManager via VBTGatewayRegistry)
 
     /// 転送完了コールバックから呼ばれる。エラーなしなら ACK 扱い。
+    /// 注意: WCSession の `didFinish` はファイルが Watch から iPhone に渡されたことだけを保証する。
+    /// iPhone 側の処理（録画停止 + meta.json 書き出し）の最終 ACK は `notifyTransferAck` 経由で
+    /// `sendMessage(["status": "ack"])` から受領するのが正準。本メソッドは "中間 ACK" として扱う。
+    /// 仕様書 §6 step 12 の「ACK」と整合させるため、iPhone 側から明示的に ACK が届くまで
+    /// `pendingTransferContinuation` は保留したい。本実装では「エラーがなく、後段 ACK 待ち」と扱う。
     func notifyTransferDidFinish(error: Error?) {
         if let error = error {
             resumeTransfer(with: .failed(reason: error.localizedDescription))
-        } else {
-            resumeTransfer(with: .acknowledged)
         }
+        // エラーなしの場合は continuation を解決しない（iPhone 側からの明示的 ACK を待つ）
+    }
+
+    /// iPhone 側からの最終 ACK メッセージで呼ばれる（仕様書 §6 step 12 真の ACK）。
+    func notifyTransferAck() {
+        resumeTransfer(with: .acknowledged)
+    }
+
+    /// iPhone 側からの失敗通知で呼ばれる。
+    func notifyTransferFailure(reason: String) {
+        resumeTransfer(with: .failed(reason: reason))
     }
 
     // MARK: - Private
