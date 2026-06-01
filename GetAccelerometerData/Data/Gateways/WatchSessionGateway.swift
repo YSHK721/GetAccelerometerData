@@ -80,7 +80,7 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     
     // MARK: - WCSessionDelegate
     
-    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+    @objc nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         let reachable = session.isReachable
         let rawState = activationState.rawValue
         DispatchQueue.main.async {
@@ -96,7 +96,7 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
-    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+    @objc nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         let reachable = session.isReachable
         DispatchQueue.main.async {
             self.isSessionReachable = reachable
@@ -105,7 +105,7 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
     
-    nonisolated func session(_ session: WCSession, didReceive file: WCSessionFile) {
+    @objc nonisolated func session(_ session: WCSession, didReceive file: WCSessionFile) {
         // VBT 経路の振分け（Phase B / 仕様書 §6 step 12）。VBT IMU CSV は専用ルーターへ流す。
         if VBTWatchMessageRouter.isVBTIMUFile(metadata: file.metadata) {
             let router: VBTWatchMessageRouter? = DispatchQueue.main.sync { self.vbtRouter }
@@ -187,8 +187,20 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
     
+    // 停止メッセージ等の replyHandler なし受信。Watch 側 sendStopRecordingSignal() が
+    // replyHandler:nil で送るため、本変種が未実装だと VBTWatchMessageRouter にルーティングされない。
+    @objc nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        // 仕様書 §6 step 10: 停止メッセージは replyHandler なしで送られる
+        if VBTWatchMessageRouter.isStopRecordingMessage(message) {
+            let router: VBTWatchMessageRouter? = DispatchQueue.main.sync { self.vbtRouter }
+            router?.handleStopRecording { _ in }
+            return
+        }
+        // それ以外の no-reply メッセージは現状ハンドルしない（既存メッセージ系は別 delegate 経路で処理）
+    }
+
     // 即時転送のメタデータ受信
-    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+    @objc nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
         // VBT メッセージの振分け（Phase B / 仕様書 §6 step 5）
         // replyHandler は WCSession delegate の制約上 non-Sendable だが、後段 Task で唯一回呼ぶため
         // SendableBox でラップして渡す（同期到達時点で他から触られないことが保証されている）。
@@ -228,7 +240,7 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     // 即時転送のデータ受信
-    nonisolated func session(_ session: WCSession, didReceiveMessageData messageData: Data, replyHandler: @escaping (Data) -> Void) {
+    @objc nonisolated func session(_ session: WCSession, didReceiveMessageData messageData: Data, replyHandler: @escaping (Data) -> Void) {
         // 最後に受信したメタデータからファイル名を取得（nonisolated + NSLock 保護の同期読み出し）
         let metadata = readMetadata()
         if let fileName = metadata["fileName"] {
@@ -270,7 +282,7 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     // バックグラウンド転送の受信
-    nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String : Any]) {
+    @objc nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String : Any]) {
         guard let fileData = userInfo["fileData"] as? Data,
             let fileName = userInfo["fileName"] as? String else {
             print("受信したユーザー情報に必要なデータがありません")
@@ -336,7 +348,7 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     // 必須メソッド
-    nonisolated func session(_ session: WCSession, didFinish fileTransfer: WCSessionFileTransfer, error: Error?) {
+    @objc nonisolated func session(_ session: WCSession, didFinish fileTransfer: WCSessionFileTransfer, error: Error?) {
         DispatchQueue.main.async {
             if let error = error {
                 self.lastMessage = "ファイル転送エラー: \(error.localizedDescription)"
@@ -346,11 +358,11 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     }
     
     // iOS必須メソッド
-    nonisolated func sessionDidBecomeInactive(_ session: WCSession) {
+    @objc nonisolated func sessionDidBecomeInactive(_ session: WCSession) {
         print("WCSession became inactive")
     }
-    
-    nonisolated func sessionDidDeactivate(_ session: WCSession) {
+
+    @objc nonisolated func sessionDidDeactivate(_ session: WCSession) {
         print("WCSession deactivated")
         // iOSでは新しいWatchとペアリングした場合などに再アクティベートが必要
         WCSession.default.activate()

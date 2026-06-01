@@ -131,14 +131,16 @@ class AccelerometerManager: NSObject, ObservableObject, WCSessionDelegate {
     }
     
     // WCSessionDelegate メソッド
-    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+    // @objc 明示: @MainActor + nonisolated 構成では Obj-C ランタイムが
+    // respondsToSelector: で NO を返すケースがあるため、明示的に Obj-C 公開する。
+    @objc nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         if let error = error {
             print("WCSession アクティベーションエラー: \(error.localizedDescription)")
         }
     }
 
     // ファイル転送完了時のコールバック（transferFileの完了通知）
-    nonisolated func session(_ session: WCSession, didFinish fileTransfer: WCSessionFileTransfer, error: Error?) {
+    @objc nonisolated func session(_ session: WCSession, didFinish fileTransfer: WCSessionFileTransfer, error: Error?) {
         // ISSUE-018 解消: VBT 経路（metadata.fileType == vbt.imuCSV）なら gateway へブリッジ。
         let isVBT = VBTGatewayRegistry.isVBTTransfer(fileTransfer)
         if isVBT {
@@ -164,7 +166,7 @@ class AccelerometerManager: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     // iPhone からの sendMessage（ACK メッセージ等）受信。VBT 用 ACK は VBTGatewayRegistry にブリッジ。
-    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+    @objc nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         if VBTGatewayRegistry.shared.bridgeAckMessage(message) {
             return
         }
