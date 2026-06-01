@@ -124,6 +124,10 @@ final class VBTGroundTruthComposition {
     let loadIMUWaveformUseCase: LoadIMUWaveformUseCase
     let saveLabelsUseCase: SaveLabelsUseCase
 
+    // Phase D: エクスポート用 UseCase / Infrastructure（仕様書 §8）
+    let labelsExistenceChecker: FileSystemLabelsExistenceChecker
+    let exportSessionUseCase: ExportSessionUseCase
+
     private weak var attachedSessionManager: WatchSessionManager?
 
     init() {
@@ -145,6 +149,14 @@ final class VBTGroundTruthComposition {
         self.loadSessionListUseCase = LoadSessionListUseCase(loader: sessionListLoader)
         self.loadIMUWaveformUseCase = LoadIMUWaveformUseCase(loader: imuLoader)
         self.saveLabelsUseCase = SaveLabelsUseCase(store: labelsStore)
+
+        // Phase D 配線（仕様書 §8）
+        let labelsChecker = FileSystemLabelsExistenceChecker()
+        self.labelsExistenceChecker = labelsChecker
+        self.exportSessionUseCase = ExportSessionUseCase(
+            loader: sessionListLoader,
+            labelsChecker: labelsChecker
+        )
     }
 
     /// WatchSessionManager が初期化済の場合に Router を attach する。
