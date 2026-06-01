@@ -948,6 +948,8 @@
 				INFOPLIST_FILE = GetAccelerometerData/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GetAccelerometerData;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "VBT 検証用のスクワット動画録画に使用します";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "動画録画中の手叩きマーカー音をクラップ同期で使用します";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
 				INFOPLIST_KEY_NSMotionUsageDescription = "加速度データとジャイロスコープデータを取得してワークアウトの動きを分析するために使用します";
@@ -985,6 +987,8 @@
 				INFOPLIST_FILE = GetAccelerometerData/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GetAccelerometerData;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "VBT 検証用のスクワット動画録画に使用します";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "動画録画中の手叩きマーカー音をクラップ同期で使用します";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "加速度データをワークアウトセッションとして記録するため、ヘルスケアデータへのアクセスが必要です";
 				INFOPLIST_KEY_NSMotionUsageDescription = "加速度データとジャイロスコープデータを取得してワークアウトの動きを分析するために使用します";

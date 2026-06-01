@@ -97,6 +97,9 @@ struct ContentView: View {
             }
             .buttonStyle(PlainButtonStyle())
             .padding(.horizontal)
+
+            // VBT Ground Truth Tool Phase B 入口（.docs/VBT_GroundTruth_Tool_Spec.md）
+            VBTGroundTruthEntryLink()
             
             // 明示的なナビゲーションリンク
             .navigationDestination(isPresented: $isNavigatingToChart) {
@@ -110,10 +113,16 @@ struct ContentView: View {
         }
         .onAppear {
             sessionManager.activateSession()
-            
+
             // 初期表示時に既存のファイルがあれば最初のファイルを選択
             if let firstFile = sessionManager.allReceivedFiles.first {
                 selectedFileURL = firstFile
+            }
+        }
+        // VBT Ground Truth Tool Phase B: Composition から router attach 要求を受信
+        .onReceive(NotificationCenter.default.publisher(for: VBTGroundTruthComposition.attachRouterRequestNotification)) { note in
+            if let router = note.object as? VBTWatchMessageRouter {
+                sessionManager.vbtRouter = router
             }
         }
         .sheet(isPresented: $showingFilePicker) {
