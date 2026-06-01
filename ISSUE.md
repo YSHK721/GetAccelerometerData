@@ -275,24 +275,25 @@
 
 ---
 
-## 集計（2026-05-31 最終更新）
+## 集計（2026-06-01 最終更新）
 
 | 重大度   | 件数 | 番号 |
 |----------|---|---|
-| Critical | 5 | ISSUE-001, 002, 003, 004, 017 |
+| Critical | 6 | ISSUE-001, 002, 003, 004, 017, 019 |
 | High     | 7 | ISSUE-005, 006, 007, 008, 014, 015, 016 |
-| Medium   | 5 | ISSUE-009, 010, 011, 012, 013 |
-| Low      | 0 | — |
-| **合計** | **17** | **ISSUE-001 〜 ISSUE-017** |
+| Medium   | 6 | ISSUE-009, 010, 011, 012, 013, 018 |
+| Low      | 1 | ISSUE-020 |
+| **合計** | **20** | **ISSUE-001 〜 ISSUE-020** |
 
 ### ステータス内訳
 
-| ステータス  | 件数 | 番号 |
-|-------------|---|---|
-| OPEN        | 0 | — |
-| IN_PROGRESS | 0 | — |
-| RESOLVED    | 17 | ISSUE-001 〜 017 |
-| WONTFIX     | 0 | — |
+| ステータス    | 件数 | 番号 |
+|---------------|---|---|
+| OPEN          | 0 | — |
+| IN_PROGRESS   | 0 | — |
+| RESOLVED      | 19 | ISSUE-001 〜 019 |
+| KNOWN_ISSUE   | 1 | ISSUE-020 |
+| WONTFIX       | 0 | — |
 
 ### 完了概要
 
@@ -324,3 +325,32 @@
 - **実施内容**: (1) Watch 側に `VBTGatewayRegistry`（`@unchecked Sendable` シングルトン）を新設し、`WCSessionVBTGateway` がインスタンス生成時に self-register / `deinit` で unregister する仕組みを導入。(2) 既存 `AccelerometerManager.session(_:didFinish:error:)` から `VBTGatewayRegistry.isVBTTransfer(_:)` で metadata.fileType == "vbt.imuCSV" を判定し、VBT 経路なら `VBTGatewayRegistry.shared.bridgeDidFinish(...)` 経由で `WCSessionVBTGateway.notifyTransferDidFinish` を呼ぶ。(3) iPhone 側 `WatchSessionGateway` に `VBTWatchMessageRouter` を新設し、`vbt.startRecording` / `vbt.stopRecording` / `vbt.imuCSV` を専用ルーターへ振分け、既存転送経路（CombinedSensorData JSON / 汎用 CSV）と排他化。(4) iPhone → Watch の最終 ACK は `["status": "ack"]` の sendMessage を新設し、Watch 側 `AccelerometerManager.session(_:didReceiveMessage:)` から `VBTGatewayRegistry.shared.bridgeAckMessage(_:)` 経由で `WCSessionVBTGateway.notifyTransferAck()` を呼ぶ。(5) `notifyTransferDidFinish(error:)` は「中間通知（エラー時のみ continuation 解決、成功時は ACK 待機）」へ意味を更新し、`notifyTransferAck` / `notifyTransferFailure` を新設して仕様書 §6 step 12 の真の ACK と整合させる。(6) Watch 側 `VBTRecordingController.tapStopRecording()` で `useCase.imuStartTimestamp` を `gateway.setImuStartTimestamp(_:)` 経由で metadata に注入し、iPhone 側 meta.json の `imu_start_timestamp` を仕様書 §7 通りに伝達する。
 - **検証結果**: iOS / watchOS 両ターゲット clean build SUCCEEDED（Xcode 26.5 / iPhone 17 シミュレータ + Apple Watch Series 11 シミュレータ）。SensorDataKit 全 89 テスト pass（追加 `VBTReceptionUseCaseTests` / `MetaJSONPayloadTests` / `SessionFolderNamingTests` / `VBTSessionInputTests` 含む）。
 - **残課題**: 実機ペアでの統合検証（特に 60fps セットアップの実機モデル別動作確認）は Phase B 受領者責務として残置。
+
+## ISSUE-019
+
+- **発生日**: 2026-06-01
+- **解決日**: 2026-06-01
+- **タイトル**: WCSessionDelegate のメソッドが `respondsToSelector:` で NO を返し delegate 配線が機能しない
+- **重大度**: Critical
+- **ステータス**: RESOLVED
+- **発生工程**: VBT Ground Truth Tool Phase D 実機検証
+- **該当ファイル**: `GetAccelerometerData/Data/Gateways/WatchSessionGateway.swift` / `GetAccelerometerData Watch App/AccelerometerManager.swift`
+- **概要**: iOS Simulator console.log に `delegate GetAccelerometerData.WatchSessionManager does not implement delegate method` が出力され、Watch 側で `WCErrorCodeDeliveryFailed` が発生。原因は `@MainActor` クラスの `WCSessionDelegate`（Objective-C プロトコル）optional メソッドを `nonisolated func` で実装していたが `@objc` 修飾子が欠落していたこと。Swift 6 strict concurrency 環境で `@MainActor` + `nonisolated` の組み合わせは Obj-C ランタイムの `respondsToSelector:` が NO を返すケースがあり（Apple 既知挙動）、WCSession は optional メソッドを selector 存在チェックで呼ぶため delegate に届かない状態となっていた。加えて Watch 側 `WCSessionVBTGateway.sendStopRecordingSignal()` は `replyHandler: nil` で送信するため、iPhone 側に `session(_:didReceiveMessage:)`（replyHandler なし変種）が必要だが未実装で、停止メッセージが `VBTWatchMessageRouter` にルーティングされなかった。
+- **影響範囲**: VBT 停止フロー全体（Watch → iPhone への停止シグナル / IMU 転送 / ACK）。Phase D 実機検証で delegate が機能せず VBT 録画停止の同期破綻が発生。
+- **実施内容**: (1) iPhone 側 `WatchSessionManager` の WCSessionDelegate メソッド 9 個（`session(_:activationDidCompleteWith:error:)` / `sessionReachabilityDidChange(_:)` / `session(_:didReceive:)` / `session(_:didReceiveMessage:replyHandler:)` / `session(_:didReceiveMessageData:replyHandler:)` / `session(_:didReceiveUserInfo:)` / `session(_:didFinish:error:)` / `sessionDidBecomeInactive(_:)` / `sessionDidDeactivate(_:)`）に `@objc` を明示。(2) `session(_:didReceiveMessage:)`（replyHandler なし変種）を新規追加し、`VBTWatchMessageRouter.isStopRecordingMessage(_:)` で判定した停止メッセージを `VBTWatchMessageRouter.handleStopRecording(_:)` に振分け。(3) Watch 側 `AccelerometerManager` の WCSessionDelegate メソッド 3 個（`session(_:activationDidCompleteWith:error:)` / `session(_:didFinish:error:)` / `session(_:didReceiveMessage:)`）にも `@objc` を明示。
+- **検証結果**: SensorDataKit 全 126 テスト pass。iOS（iPhone 17 シミュレータ）/ watchOS（Apple Watch Series 11 46mm シミュレータ）両ターゲット clean build SUCCEEDED。
+- **残課題**: 実機ペア（iPhone + Apple Watch）での停止シグナル到達確認は Phase D 受領者責務として残置。
+
+## ISSUE-020
+
+- **発生日**: 2026-06-01
+- **解決日**: 2026-06-01
+- **タイトル**: iOS Simulator で AVCaptureSession 60fps 録画が `FigCaptureSourceRemote err=-17281` で失敗
+- **重大度**: Low
+- **ステータス**: KNOWN_ISSUE
+- **発生工程**: VBT Ground Truth Tool Phase D 検証
+- **該当ファイル**: VBT カメラ録画系（iOS 側）
+- **概要**: iOS Simulator では実カメラハードウェアが存在しないため、AVCaptureSession で 60fps 動画録画を開始すると `FigCaptureSourceRemote err=-17281` のエラーで失敗する。Simulator 制約事項であり、実機影響なし。仕様書 §4「同期精度最優先」方針では実機検証を前提としており、修正対象外。
+- **影響範囲**: iOS Simulator 環境での VBT 動画録画機能のみ。実機（iPhone）影響なし。
+- **解決方針**: 実機（iPhone）でテストする。Simulator では VBT 動画録画機能は動作しないことを開発者向けドキュメントに明記済み（本 Issue が記録）。修正実装は不要。
+- **残課題**: なし（Simulator 限定の既知制約として確定）。
