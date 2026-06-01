@@ -100,6 +100,9 @@ struct ContentView: View {
 
             // VBT Ground Truth Tool Phase B 入口（.docs/VBT_GroundTruth_Tool_Spec.md）
             VBTGroundTruthEntryLink()
+
+            // VBT Ground Truth Tool Phase C 入口（仕様書 §10 ラベリング）
+            VBTSessionListEntryLink()
             
             // 明示的なナビゲーションリンク
             .navigationDestination(isPresented: $isNavigatingToChart) {

@@ -21,7 +21,7 @@ public struct LabelingState: Sendable, Equatable {
         public var endTimeVideo: TimeInterval?
     }
 
-    public enum MissingRequirement: Sendable, Equatable {
+    public enum MissingRequirement: Sendable, Equatable, Hashable {
         case syncVideoStart
         case syncVideoEnd
         case syncImuStart

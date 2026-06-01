@@ -119,6 +119,11 @@ final class VBTGroundTruthComposition {
     let useCase: VBTReceptionUseCase
     let router: VBTWatchMessageRouter
 
+    // Phase C: ラベリング UI 用 UseCase（仕様書 §10）
+    let loadSessionListUseCase: LoadSessionListUseCase
+    let loadIMUWaveformUseCase: LoadIMUWaveformUseCase
+    let saveLabelsUseCase: SaveLabelsUseCase
+
     private weak var attachedSessionManager: WatchSessionManager?
 
     init() {
@@ -132,6 +137,14 @@ final class VBTGroundTruthComposition {
         self.clock = clk
         self.useCase = uc
         self.router = rt
+
+        // Phase C 配線
+        let sessionListLoader = FileSystemSessionListStore()
+        let imuLoader = CSVIMUWaveformLoader()
+        let labelsStore = FileSystemLabelsStore()
+        self.loadSessionListUseCase = LoadSessionListUseCase(loader: sessionListLoader)
+        self.loadIMUWaveformUseCase = LoadIMUWaveformUseCase(loader: imuLoader)
+        self.saveLabelsUseCase = SaveLabelsUseCase(store: labelsStore)
     }
 
     /// WatchSessionManager が初期化済の場合に Router を attach する。
