@@ -157,6 +157,18 @@ struct ContentView: View {
                             .cornerRadius(10)
                     }
                     .buttonStyle(PlainButtonStyle())
+
+                    // VBT Ground Truth Tool (Phase A)
+                    NavigationLink(destination: VBTRecordingView()) {
+                        Text("VBT 記録 (Phase A)")
+                            .font(.headline)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.purple)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .padding()
