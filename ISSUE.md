@@ -310,3 +310,18 @@
 | WatchSessionGateway 再設計      | `MainActor.assumeIsolated` 依存を解消する明示的 actor 設計 |
 | テストカバレッジ復旧            | 削除されたテストの代わりに、Protocol 化された UseCase / Gateway に対する単体テストを再構築 |
 | AppDependencies の Watch 対応   | Watch アプリ側の Composition Root（現状 `AccelerometerManager()` 直接生成）を AppComposition 相当の構造に統一 |
+
+## ISSUE-018
+
+- **発生日**: 2026-06-01
+- **タイトル**: VBT Phase A の WCSession delegate 競合（transferFile ACK ブリッジ未配線）
+- **重大度**: Middle
+- **ステータス**: OPEN
+- **発生工程**: VBT Ground Truth Tool Phase A 実装
+- **概要**: `WCSessionVBTGateway.transferIMUFile(at:timeout:)` は `WCSessionDelegate.session(_:didFinish:error:)` の発火を期待して `notifyTransferDidFinish(error:)` を経由した `CheckedContinuation` 再開を行う設計だが、`WCSession.default.delegate` は既存 `AccelerometerManager` が保持しており、Phase A 単体では gateway へのブリッジが配線されていない。結果として `transferIMUFile` の `await` は 60s タイムアウトまで待たされる（仕様書 §9 「IMU 転送タイムアウト」異常系で `transferTimeout` が誤発火する可能性）。
+- **影響範囲**: VBTRecordingController → VBTRecordingUseCase → WCSessionVBTGateway の停止フロー。Phase A 単体実機テストで 60s タイムアウトが発生する見込み。
+- **回避策（Phase A 動作確認用）**:
+  1. `AccelerometerManager.session(_:didFinish:error:)` から `WCSessionVBTGateway.notifyTransferDidFinish` を呼ぶブリッジ追加（Phase B 着手時に対応推奨）
+  2. または、`WCSessionVBTGateway` を独立した WCSessionDelegate として登録し、既存 `AccelerometerManager.session.delegate = self` と排他化（要設計判断）
+- **対策方針**: Phase B（iPhone 側 AVFoundation 録画）着手時に、iPhone 側 `WatchSessionManager` と Watch 側 `WCSessionVBTGateway` を `VBT.startRecordingMessage` / `vbt.imuCSV` 専用に router 化し、既存 `AccelerometerManager` の汎用転送経路と分離する。
+- **検証手段**: Phase B 着手時に統合テスト（実機 Pair）で stop → ACK → completed 経路を計測。
