@@ -19,6 +19,11 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     @Published var lastMessage = ""
     @Published var receivedDataFiles: [URL] = []
 
+    /// VBT Ground Truth Tool 用ルーター（Phase B）。
+    /// VBT 専用メッセージ（vbt.startRecording / vbt.imuCSV）を Use Case に振分ける。
+    /// 既存転送経路（CombinedSensorData JSON / 汎用 CSV）と排他化する。
+    var vbtRouter: VBTWatchMessageRouter?
+
     private var fileReceivedDates: [String: Date] = [:]
 
     // メタデータの受信（ファイル名など）。WCSession デリゲートはバックグラウンドキューから
@@ -101,6 +106,32 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     }
     
     nonisolated func session(_ session: WCSession, didReceive file: WCSessionFile) {
+        // VBT 経路の振分け（Phase B / 仕様書 §6 step 12）。VBT IMU CSV は専用ルーターへ流す。
+        if VBTWatchMessageRouter.isVBTIMUFile(metadata: file.metadata) {
+            let router: VBTWatchMessageRouter? = DispatchQueue.main.sync { self.vbtRouter }
+            if let router = router {
+                let originURL = file.fileURL
+                let metadata = file.metadata
+                DispatchQueue.main.async {
+                    self.isTransferring = true
+                    self.lastMessage = "VBT IMU 受信中..."
+                }
+                router.handleIMUFileReceived(sourceURL: originURL, metadata: metadata) { [weak self] ok in
+                    // 完了通知を Watch 側に送る（仕様書 §6 step 12 ACK）
+                    let reply: [String: Any] = ok ? ["status": "ack"] : ["status": "error"]
+                    // WCSession は Sendable ではないため、コールバック時点で再取得する。
+                    if WCSession.isSupported() {
+                        WCSession.default.sendMessage(reply, replyHandler: nil, errorHandler: { _ in })
+                    }
+                    DispatchQueue.main.async {
+                        self?.isTransferring = false
+                        self?.lastMessage = ok ? "VBT セッション保存完了" : "VBT IMU 受信エラー"
+                    }
+                }
+                return
+            }
+        }
+
         DispatchQueue.main.async {
             self.isTransferring = true
             self.lastMessage = "ファイルを受信中..."
@@ -158,6 +189,32 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     
     // 即時転送のメタデータ受信
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+        // VBT メッセージの振分け（Phase B / 仕様書 §6 step 5）
+        // replyHandler は WCSession delegate の制約上 non-Sendable だが、後段 Task で唯一回呼ぶため
+        // SendableBox でラップして渡す（同期到達時点で他から触られないことが保証されている）。
+        if VBTWatchMessageRouter.isStartRecordingMessage(message) {
+            let router: VBTWatchMessageRouter? = DispatchQueue.main.sync { self.vbtRouter }
+            if let router = router {
+                let bridge = SendableReplyHandler(replyHandler)
+                router.handleStartRecording { reply in bridge.handler(reply) }
+                return
+            } else {
+                replyHandler(["status": "error", "reason": "VBT router not attached"])
+                return
+            }
+        }
+        if VBTWatchMessageRouter.isStopRecordingMessage(message) {
+            let router: VBTWatchMessageRouter? = DispatchQueue.main.sync { self.vbtRouter }
+            if let router = router {
+                let bridge = SendableReplyHandler(replyHandler)
+                router.handleStopRecording { reply in bridge.handler(reply) }
+                return
+            } else {
+                replyHandler(["status": "ack"])
+                return
+            }
+        }
+
         // メタデータを保存（nonisolated + NSLock 保護で同期書き込み）
         if let transferType = message["transferType"] as? String, transferType == "immediate" {
             var captured: [String: String] = ["transferType": "immediate"]
@@ -297,5 +354,16 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
         print("WCSession deactivated")
         // iOSでは新しいWatchとペアリングした場合などに再アクティベートが必要
         WCSession.default.activate()
+    }
+}
+
+// MARK: - SendableReplyHandler
+// WCSessionDelegate の replyHandler は non-Sendable だが、本ファイルでは Task 経由で
+// 1 回のみ呼ぶ用途に限定される。Swift 6 strict concurrency 下で Task に渡すため、
+// `@unchecked Sendable` でラップする最小ヘルパ。同期到達のため race condition は生じない。
+private final class SendableReplyHandler: @unchecked Sendable {
+    let handler: ([String: Any]) -> Void
+    init(_ handler: @escaping ([String: Any]) -> Void) {
+        self.handler = handler
     }
 }

@@ -139,6 +139,13 @@ class AccelerometerManager: NSObject, ObservableObject, WCSessionDelegate {
 
     // ファイル転送完了時のコールバック（transferFileの完了通知）
     nonisolated func session(_ session: WCSession, didFinish fileTransfer: WCSessionFileTransfer, error: Error?) {
+        // ISSUE-018 解消: VBT 経路（metadata.fileType == vbt.imuCSV）なら gateway へブリッジ。
+        let isVBT = VBTGatewayRegistry.isVBTTransfer(fileTransfer)
+        if isVBT {
+            _ = VBTGatewayRegistry.shared.bridgeDidFinish(fileTransfer: fileTransfer, error: error)
+            // VBT 経路でも一時ファイル削除と UI 状態の更新は行う
+        }
+
         let fileURL = fileTransfer.file.fileURL
 
         // 転送用に書き出した一時ファイルを削除
@@ -153,6 +160,13 @@ class AccelerometerManager: NSObject, ObservableObject, WCSessionDelegate {
                 print("✅ ファイル転送完了: \(fileURL.lastPathComponent)")
                 self.transferStatus = "ファイル転送が完了しました"
             }
+        }
+    }
+
+    // iPhone からの sendMessage（ACK メッセージ等）受信。VBT 用 ACK は VBTGatewayRegistry にブリッジ。
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        if VBTGatewayRegistry.shared.bridgeAckMessage(message) {
+            return
         }
     }
     
