@@ -21,10 +21,15 @@ public final class MotionReplayViewModel: ObservableObject {
     /// Timer 周期（約 60Hz）
     private static let tickInterval: TimeInterval = 0.016
 
-    public init() {
+    /// M-1: ロード経路を Output Boundary 経由に変更。
+    /// テスト時は mock loader を init で注入してロード結果を制御できる。
+    private let loader: AttitudeReplayLoader
+
+    public init(loader: AttitudeReplayLoader = DefaultAttitudeReplayLoader()) {
         self.state = MotionReplayState()
         self.loadError = nil
         self.timerCancellable = nil
+        self.loader = loader
     }
 
     /// imu.csv を読み AttitudeSeries を構築。失敗時は loadError 設定。
@@ -37,10 +42,10 @@ public final class MotionReplayViewModel: ObservableObject {
         self.state.currentTime = 0
         self.loadError = nil
 
+        let capturedLoader = self.loader
         let result: Result<AttitudeSeries, Error> = await Task.detached(priority: .userInitiated) {
             do {
-                let samples = try AttitudeIMUSource.load(folderURL: folderURL)
-                let series = try AttitudeReconstructor.reconstruct(from: samples)
+                let series = try await capturedLoader.load(folderURL: folderURL)
                 return .success(series)
             } catch {
                 return .failure(error)
