@@ -44,4 +44,27 @@ enum VBTLabelingSkinShared {
         case .syncImuOrderInvalid:      return "SYNC (IMU) 順序不正（END > START でない）"
         }
     }
+
+    /// Compact スキン用の短縮ラベル変換。
+    /// 1 画面密集配置のため文字数を抑えた版。`missingLabel` と用途違いで併存させる。
+    /// 文言は CompactLabelingSkin の従前 private 実装と完全等価。
+    static func shortMissingLabel(_ r: LabelingState.MissingRequirement) -> String {
+        switch r {
+        case .syncVideoStart:           return "SYNC-S(V)"
+        case .syncVideoEnd:             return "SYNC-E(V)"
+        case .syncImuStart:             return "SYNC-S(I)"
+        case .syncImuEnd:               return "SYNC-E(I)"
+        case .atLeastOneRep:            return "BOTTOM未"
+        case .bottomTimeMissing(let i): return "#\(i)bottom欠"
+        case .syncVideoOrderInvalid:    return "V順不正"
+        case .syncImuOrderInvalid:      return "I順不正"
+        }
+    }
+
+    /// 動画スクラブバーの進捗比率 [0, 1] を計算する純粋関数。
+    /// duration <= 0 の場合は 0.0、それ以外は clamp(currentTime/duration, 0, 1) を返す。
+    static func videoProgress(currentTime: TimeInterval, duration: TimeInterval) -> Double {
+        guard duration > 0 else { return 0.0 }
+        return min(1.0, max(0.0, currentTime / duration))
+    }
 }

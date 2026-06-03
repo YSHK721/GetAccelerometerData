@@ -188,8 +188,10 @@ struct ChartCentricLabelingSkin: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Video scrub").font(.caption2).foregroundStyle(.secondary)
             GeometryReader { geo in
-                let progress: Double = viewModel.videoDuration > 0
-                    ? min(1.0, max(0.0, viewModel.currentVideoTime / viewModel.videoDuration)) : 0
+                let progress = VBTLabelingSkinShared.videoProgress(
+                    currentTime: viewModel.currentVideoTime,
+                    duration: viewModel.videoDuration
+                )
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.gray.opacity(0.3)).frame(height: 6)
                     Capsule().fill(Color.blue).frame(width: geo.size.width * progress, height: 6)
