@@ -13,7 +13,7 @@ final class CSVValidationTests: XCTestCase {
         """
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: validCSV)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: validCSV)
         
         // 検証
         XCTAssertTrue(isValid, "正常なCSVデータは有効と判断されるべきです")
@@ -28,7 +28,7 @@ final class CSVValidationTests: XCTestCase {
         """
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: csvWithWhitespace)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: csvWithWhitespace)
         
         // 検証
         XCTAssertTrue(isValid, "ヘッダーに空白を含むCSVデータも有効と判断されるべきです")
@@ -43,7 +43,7 @@ final class CSVValidationTests: XCTestCase {
         """
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: csvWithMixedCase)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: csvWithMixedCase)
         
         // 検証
         XCTAssertTrue(isValid, "大文字小文字が混在するヘッダーも有効と判断されるべきです")
@@ -58,7 +58,7 @@ final class CSVValidationTests: XCTestCase {
         """
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: csvWithMissingColumn)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: csvWithMissingColumn)
         
         // 検証
         XCTAssertFalse(isValid, "必要なカラムが欠けているCSVデータは無効と判断されるべきです")
@@ -74,7 +74,7 @@ final class CSVValidationTests: XCTestCase {
         """
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: csvWithInconsistentColumns)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: csvWithInconsistentColumns)
         
         // 検証
         XCTAssertFalse(isValid, "列数が一致しない行を含むCSVデータは無効と判断されるべきです")
@@ -89,7 +89,7 @@ final class CSVValidationTests: XCTestCase {
         """
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: csvWithInvalidNumbers)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: csvWithInvalidNumbers)
         
         // 検証
         XCTAssertFalse(isValid, "数値として解析できない値を含むCSVデータは無効と判断されるべきです")
@@ -104,7 +104,7 @@ final class CSVValidationTests: XCTestCase {
         """
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: csvWithDifferentOrder)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: csvWithDifferentOrder)
         
         // 検証
         XCTAssertTrue(isValid, "カラムの順序が異なるCSVデータも有効と判断されるべきです")
@@ -116,7 +116,7 @@ final class CSVValidationTests: XCTestCase {
         let emptyCSV = ""
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: emptyCSV)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: emptyCSV)
         
         // 検証
         XCTAssertFalse(isValid, "空のCSVデータは無効と判断されるべきです")
@@ -131,7 +131,7 @@ final class CSVValidationTests: XCTestCase {
         """
         
         // 実行
-        let isValid = DataExportService.validateCSVFormat(csvString: csvWithExtraColumns)
+        let isValid = ValidateSensorCSVUseCase().execute(csvString: csvWithExtraColumns)
         
         // 検証
         XCTAssertTrue(isValid, "必要なカラムに加えて余分なカラムを含むCSVデータも有効と判断されるべきです")
