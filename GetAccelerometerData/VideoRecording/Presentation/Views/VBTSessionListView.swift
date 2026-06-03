@@ -84,17 +84,23 @@ struct VBTSessionListView: View {
                 }
             }
 
-            // Phase 5 (Motion Replay PoC): 3D リプレイ画面への導線
-            NavigationLink(destination: MotionReplayView(folderURL: row.folderURL)) {
-                Label("3D リプレイ [PoC]", systemImage: "rotate.3d")
-            }
+            // PoC 系導線を 1 つの折りたたみグループに集約
+            // ヘッダのみ caption 化（内部 NavigationLink Label には伝播させない）
+            DisclosureGroup {
+                // Phase 5 (Motion Replay PoC): 3D リプレイ画面への導線
+                NavigationLink(destination: MotionReplayView(folderURL: row.folderURL)) {
+                    Label("3D リプレイ [PoC]", systemImage: "rotate.3d")
+                }
 
-            // Skin variants: VBT Labeling 画面のデザインバリエーション切替版への導線
-            NavigationLink(destination: VBTLabelingSkinnedView(
-                sessionId: row.entry.folderName,
-                folderURL: row.folderURL
-            )) {
-                Label("ラベリング [Skin]", systemImage: "paintpalette")
+                // Skin variants: VBT Labeling 画面のデザインバリエーション切替版への導線
+                NavigationLink(destination: VBTLabelingSkinnedView(
+                    sessionId: row.entry.folderName,
+                    folderURL: row.folderURL
+                )) {
+                    Label("ラベリング [Skin]", systemImage: "paintpalette")
+                }
+            } label: {
+                Text("Lab 機能 [PoC]").font(.caption).foregroundStyle(.secondary)
             }
 
             // Phase D: 共有ボタン

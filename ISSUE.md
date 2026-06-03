@@ -502,3 +502,36 @@
 - **実施内容**: (1) `imuWaveformView` の Swift Charts に `RuleMark` を 2 本追加し、`viewModel.state.syncMarkerImuStart`（緑・実線・`S` アノテーション）と `syncMarkerImuEnd`（橙・実線・`E` アノテーション）を波形上に描画。現在カーソル（赤・破線）と色分け。(2) `videoScrubBar` の `ZStack` に縦線（緑 / 橙、幅 2pt × 高さ 18pt）を `videoDuration` 比率位置に追加し、Video SYNC START/END をスクラブバー上に重畳。再生位置（青丸）と色分け。
 - **検証結果**: `xcodebuild -scheme GetAccelerometerData -destination 'generic/platform=iOS' build` BUILD SUCCEEDED。実機検証（2026-06-03 提供スクリーンショット「確認:欠落要素_SYNC （IMU）順序不正（END > START でない）ライン.PNG」）にて、IMU 波形上に緑/橙の SYNC START/END ラインと `S`/`E` アノテーションが描画されること、および ISSUE-027 の順序不正検出（欠落要素「SYNC (IMU) 順序不正」）と同時表示される状態でユーザーが視覚的に誤設定を即座に把握できることを確認。
 - **副次効果**: SYNC START/END の物理マーカー対応（動画上のタップ瞬間 ↔ IMU 上の加速度ピーク）が視認可能になり、ISSUE-027 で検出される順序不正の自己診断が大幅に容易化される。実機検証では IMU 順序不正のときも、緑（S）と橙（E）の位置関係が波形上で直接見えるため「どちらをどう動かせば直るか」が即時判断可能。
+
+---
+
+## ISSUE-029
+
+- **発生日**: 2026-06-03
+- **解決日**: 2026-06-04
+- **タイトル**: IMU データから Apple Watch の動きを 3D モデリング表示する手段が存在しない
+- **重大度**: Low（機能追加）
+- **ステータス**: RESOLVED（実機検証完了 2026-06-03）
+- **発生工程**: VBT Ground Truth Tool Phase C 解析
+- **該当ファイル**: `Packages/SensorDataKit/Sources/SensorDataKit/VBT/MotionReplay/`（新規 10 ファイル）, `GetAccelerometerData/VideoRecording/Presentation/Views/VBTSessionListView.swift`（+5）
+- **概要**: 既存 imu.csv から Apple Watch の動きを 3D 可視化する手段がなく、accel_magnitude の 2D 線グラフのみでは姿勢変化（回転 / 傾き）を直感的に把握できなかった。
+- **根本原因**: 設計段階で 3D 可視化要件が未定義。
+- **実施内容**: SensorDataKit に MotionReplay モジュールを新規追加。AttitudeQuaternion / AttitudeSeries（SLERP 補間）/ GyroSample / AttitudeIMUSource（imu.csv パース）/ AttitudeReconstructor（台形則 gyro 積分）/ MotionReplayState / MotionReplayViewModel（@MainActor + Combine Timer 60Hz）/ MotionReplayView（SwiftUI 統合）/ MotionReplaySceneView（SCNView ラップ）/ WatchSceneNodeBuilder（Apple Watch Series 9 41mm 形状ノード）。VBTSessionListView に PoC バッジ付き NavigationLink 1 件追加。既存 Watch 側 / WCSession / IMUWaveformParser は無変更。
+- **検証結果**: SwiftPM 170 テスト全通過（新規 38 件含む）、iOS BUILD SUCCEEDED、実機検証完了。
+- **既知の制約**: 純 gyro 積分のため積分ドリフトあり（60s で 0.5-2°）、初期姿勢は単位クォータニオン仮定（yaw 絶対値不定）、定性可視化に限定。
+
+---
+
+## ISSUE-030
+
+- **発生日**: 2026-06-04
+- **解決日**: 2026-06-04
+- **タイトル**: VBT ラベリング画面の UI デザインを試行錯誤するための切替機構がない
+- **重大度**: Low（UX 改善）
+- **ステータス**: RESOLVED（実機検証待ち）
+- **発生工程**: VBT Ground Truth Tool Phase C ラベリング画面
+- **該当ファイル**: `GetAccelerometerData/VideoRecording/Presentation/Views/VBTLabelingSkins/`（新規 8 ファイル）、`VBTSessionListView.swift`（+8）
+- **概要**: ラベリング画面の UI デザインが固定で、利用者が好みのレイアウト・配色を試せない。
+- **実施内容**: 5 種類デザインスキン（Classic / Compact / Dark Pro / Chart-Centric / Card-Based）を新設し、Segmented Picker で切替可能な `VBTLabelingSkinnedView` 容器を実装。共有 ViewModel 経由で全スキンが同じビジネスロジックを利用。VBTSessionListView に「ラベリング [Skin]」NavigationLink 1 件追加。既存 VBTLabelingView は無変更。
+- **検証結果**: iOS BUILD SUCCEEDED、5 スキン全てに既存 VBTLabelingView 等価の IMU 波形スクラブジェスチャを実装。
+- **副次効果**: 後段で気に入ったスキンを正式採用する判断材料が揃った。

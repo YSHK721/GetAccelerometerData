@@ -144,24 +144,8 @@ struct CompactLabelingSkin: View {
                 }
             }
             .frame(height: 100)
-            .gesture(imuScrubGesture)
+            .gesture(VBTLabelingSkinShared.imuScrubGesture(viewModel: viewModel))
         }
-    }
-
-    /// IMU 波形スクラブ（既存 VBTLabelingView.swift:197-213 と等価）
-    private var imuScrubGesture: some Gesture {
-        LongPressGesture(minimumDuration: 0.5)
-            .sequenced(before: DragGesture(minimumDistance: 0))
-            .onChanged { value in
-                if case .second(true, let drag?) = value {
-                    if let first = viewModel.samples.first?.timestamp,
-                       let last = viewModel.samples.last?.timestamp,
-                       last > first {
-                        let ratio = max(0.0, min(1.0, drag.location.x / 300.0))
-                        viewModel.imuCursorTime = first + ratio * (last - first)
-                    }
-                }
-            }
     }
 
     @ViewBuilder
