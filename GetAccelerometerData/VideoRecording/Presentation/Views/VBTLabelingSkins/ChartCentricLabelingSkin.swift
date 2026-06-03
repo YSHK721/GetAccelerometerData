@@ -42,7 +42,7 @@ struct ChartCentricLabelingSkin: View {
         }
         .overlay(alignment: .topTrailing) {
             VideoPlayer(player: viewModel.player)
-                .frame(width: 160, height: 90)
+                .frame(width: 140, height: 78)
                 .background(Color.black)
                 .cornerRadius(6)
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.blue, lineWidth: 1))
@@ -64,6 +64,7 @@ struct ChartCentricLabelingSkin: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .padding(8)
+            .padding(.bottom, 12)
         }
         .padding(.horizontal)
     }
@@ -134,24 +135,8 @@ struct ChartCentricLabelingSkin: View {
                 }
             }
             .padding(.top, 60) // overlay header の高さ分の余白
-            .gesture(imuScrubGesture)
+            .gesture(VBTLabelingSkinShared.imuScrubGesture(viewModel: viewModel))
         }
-    }
-
-    /// IMU 波形スクラブ（既存 VBTLabelingView.swift:197-213 と等価）
-    private var imuScrubGesture: some Gesture {
-        LongPressGesture(minimumDuration: 0.5)
-            .sequenced(before: DragGesture(minimumDistance: 0))
-            .onChanged { value in
-                if case .second(true, let drag?) = value {
-                    if let first = viewModel.samples.first?.timestamp,
-                       let last = viewModel.samples.last?.timestamp,
-                       last > first {
-                        let ratio = max(0.0, min(1.0, drag.location.x / 300.0))
-                        viewModel.imuCursorTime = first + ratio * (last - first)
-                    }
-                }
-            }
     }
 
     // MARK: - Event button horizontal scroller
@@ -276,7 +261,7 @@ struct ChartCentricLabelingSkin: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("欠落要素:").font(.caption.bold()).foregroundStyle(.red)
                     ForEach(viewModel.state.missingRequirements, id: \.self) { req in
-                        Text("- \(missingLabel(req))").font(.caption2).foregroundStyle(.red)
+                        Text("- \(VBTLabelingSkinShared.missingLabel(req))").font(.caption2).foregroundStyle(.red)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -300,19 +285,6 @@ struct ChartCentricLabelingSkin: View {
             .controlSize(.large)
             .disabled(!viewModel.state.canSave)
             .padding(.horizontal)
-        }
-    }
-
-    private func missingLabel(_ r: LabelingState.MissingRequirement) -> String {
-        switch r {
-        case .syncVideoStart: return "SYNC START (Video) 未記録"
-        case .syncVideoEnd:   return "SYNC END (Video) 未記録"
-        case .syncImuStart:   return "SYNC START (IMU) 未記録"
-        case .syncImuEnd:     return "SYNC END (IMU) 未記録"
-        case .atLeastOneRep:  return "レップが 0 件"
-        case .bottomTimeMissing(let i): return "rep #\(i) bottom 欠落"
-        case .syncVideoOrderInvalid: return "SYNC (Video) 順序不正"
-        case .syncImuOrderInvalid:   return "SYNC (IMU) 順序不正"
         }
     }
 }

@@ -198,24 +198,8 @@ struct DarkProLabelingSkin: View {
             .background(Color.white.opacity(0.04))
             .cornerRadius(12)
             .padding(.horizontal)
-            .gesture(imuScrubGesture)
+            .gesture(VBTLabelingSkinShared.imuScrubGesture(viewModel: viewModel))
         }
-    }
-
-    /// IMU 波形スクラブ（既存 VBTLabelingView.swift:197-213 と等価）
-    private var imuScrubGesture: some Gesture {
-        LongPressGesture(minimumDuration: 0.5)
-            .sequenced(before: DragGesture(minimumDistance: 0))
-            .onChanged { value in
-                if case .second(true, let drag?) = value {
-                    if let first = viewModel.samples.first?.timestamp,
-                       let last = viewModel.samples.last?.timestamp,
-                       last > first {
-                        let ratio = max(0.0, min(1.0, drag.location.x / 300.0))
-                        viewModel.imuCursorTime = first + ratio * (last - first)
-                    }
-                }
-            }
     }
 
     @ViewBuilder
@@ -317,7 +301,7 @@ struct DarkProLabelingSkin: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("欠落要素:").font(.caption.bold()).foregroundStyle(Color.red)
                     ForEach(viewModel.state.missingRequirements, id: \.self) { req in
-                        Text("- \(missingLabel(req))").font(.caption2).foregroundStyle(Color.red)
+                        Text("- \(VBTLabelingSkinShared.missingLabel(req))").font(.caption2).foregroundStyle(Color.red)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -341,19 +325,6 @@ struct DarkProLabelingSkin: View {
             .controlSize(.large)
             .disabled(!viewModel.state.canSave)
             .padding(.horizontal)
-        }
-    }
-
-    private func missingLabel(_ r: LabelingState.MissingRequirement) -> String {
-        switch r {
-        case .syncVideoStart: return "SYNC START (Video) 未記録"
-        case .syncVideoEnd:   return "SYNC END (Video) 未記録"
-        case .syncImuStart:   return "SYNC START (IMU) 未記録"
-        case .syncImuEnd:     return "SYNC END (IMU) 未記録"
-        case .atLeastOneRep:  return "レップが 0 件"
-        case .bottomTimeMissing(let i): return "rep #\(i) bottom 欠落"
-        case .syncVideoOrderInvalid: return "SYNC (Video) 順序不正"
-        case .syncImuOrderInvalid:   return "SYNC (IMU) 順序不正"
         }
     }
 }

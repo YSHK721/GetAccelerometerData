@@ -11,7 +11,14 @@ import SensorDataKit
 struct VBTLabelingSkinnedView: View {
 
     @StateObject private var viewModel: VBTLabelingViewModel
-    @State private var selectedSkin: LabelingSkinKind = .classic
+    @AppStorage("vbt.labeling.selectedSkin") private var selectedSkinRaw: String = LabelingSkinKind.classic.rawValue
+
+    private var selectedSkin: Binding<LabelingSkinKind> {
+        Binding(
+            get: { LabelingSkinKind(rawValue: selectedSkinRaw) ?? .classic },
+            set: { selectedSkinRaw = $0.rawValue }
+        )
+    }
 
     init(sessionId: String, folderURL: URL) {
         let composition = VBTGroundTruthMetaInputViewModel.shared
@@ -25,7 +32,7 @@ struct VBTLabelingSkinnedView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Design", selection: $selectedSkin) {
+            Picker("Design", selection: selectedSkin) {
                 ForEach(LabelingSkinKind.allCases) { kind in
                     Text(kind.displayName).tag(kind)
                 }
@@ -34,7 +41,7 @@ struct VBTLabelingSkinnedView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
 
-            switch selectedSkin {
+            switch selectedSkin.wrappedValue {
             case .classic:
                 ClassicLabelingSkin(viewModel: viewModel)
             case .compact:
