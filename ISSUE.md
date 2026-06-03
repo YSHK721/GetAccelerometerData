@@ -569,5 +569,13 @@
   4. `@Sendable` closure 内の `result1` / `result2` ローカル var 変更（L619, L626）
 - **影響**: 当該テストファイルが提供していたチャート ViewModel + Statistics UseCase のテストが消失。ただし対応する本体機能テストは別途 `CalculateStatisticsUseCaseTests`（SensorDataKit）等で部分カバー。
 - **対策案**: 4 種類の破損を順次解消（`formatDuration` 相当の現行 API 確認、`SelectableAccelerometerChartComponent` の代替探索、setUp の `MainActor.assumeIsolated` パターン適用、closure 内 mutation を `inout` または class wrapper で回避）。本タスクは ISSUE-031 のスコープを超えるため別タスク。
-- **実施内容**: (1) クラス全体に `@MainActor` を付与して 13 箇所の Sendable/sending 違反を一括解消、(2) `setUp` / `tearDown` を `async throws` 形式に変更、(3) `formatDuration` ヘルパー + `testFormatDuration()` を削除（本体 API 削除済のため）、(4) `testSelectableAccelerometerChartComponentCreation()` を削除（本体型削除済のため）、(5) `testConcurrentDataLoading` / `testConcurrentStatisticsCalculation` を `DispatchQueue + 完了ハンドラ` から `async let` の構造化並行に書き換え、`@Sendable` closure 内ローカル var 代入を排除。
+- **実施内容（初回 / 後で改訂）**: 初回はクラス全体に `@MainActor` を付与する案でコミットしたが、ISSUE-018（CoreMotion @MainActor クラッシュ）で確立された「`@MainActor` 隔離クラスから背景 API に渡すクロージャは `@Sendable` 明示必須」規約に違反する解だった（メモリ `feedback_mainactor_anti_pattern.md` 参照）。ユーザー指摘により案 Y に書き直し:
+  1. クラスから `@MainActor` を撤去
+  2. `setUp` / `tearDown` を `@MainActor override func ... async throws` 形式で **個別** 隔離（クラス全体ではなくメソッド単位）
+  3. `formatDuration` ヘルパー + `testFormatDuration()` を削除（本体 API 削除済）
+  4. `testSelectableAccelerometerChartComponentCreation()` を削除（本体型削除済）
+  5. `testConcurrentDataLoading` / `testConcurrentStatisticsCalculation` を `DispatchQueue + 完了ハンドラ` から `async let` + 必要に応じ `Task.detached` の構造化並行に書き換え
+  6. `waitForExpectations` を使う 6 テスト（`testLoadDataFromCSVWith*` 4 件 + `testCSVLoadingPerformance` + `testCSVLoadingWithCorruptedFile`）に **個別** `@MainActor` 付与
+  7. `loadDataFromCSV` ヘルパーの `completion` を `@escaping @Sendable @MainActor` に変更し Task 内送信を安全化
 - **検証結果**: `xcodebuild -only-testing:GetAccelerometerDataTests/AccelerometerChartViewTests test` TEST SUCCEEDED、`xcodebuild -only-testing:GetAccelerometerDataTests test`（iOS テスト target 全体）TEST SUCCEEDED。SwiftPM 202/202 維持。`.todo` から `.swift` に復元。
+- **副次効果**: テストクラスは nonisolated を維持できたため、将来テスト追加で非 MainActor サービスを呼ぶ際の波及（`await` 連鎖 / sending エラー）リスクを排除した。プロジェクト規約（ISSUE-018 で確立）を遵守。

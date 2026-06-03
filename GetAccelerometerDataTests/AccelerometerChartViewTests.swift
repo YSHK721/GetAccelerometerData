@@ -7,11 +7,11 @@ import UniformTypeIdentifiers
 // MARK: - AccelerometerChartView テストファイル
 // リファクタリング前の安全性基準確立のためのテストスイート
 
-// ISSUE-032: Swift 6 strict concurrency 対応として、クラス全体を @MainActor に統一。
-// XCTestCase の async test メソッドおよび waitForExpectations / DispatchQueue 呼び出しは
-// MainActor 内で完結するため、データ競合警告を一括解消する。
-// XCTest framework は MainActor isolated 派生クラスを許容する。
-@MainActor
+// ISSUE-032 (案 Y): クラス全体への @MainActor 付与は ISSUE-018 で実害（CoreMotion クラッシュ）を
+// 起こした経緯があるため禁止。Swift 6 strict concurrency 違反は個別メソッド単位で対処する:
+//   - waitForExpectations を使う sync テスト: メソッド単位で @MainActor 付与
+//   - 並行テスト: Task.detached + NSLock-guarded ホルダで Sendable 値経由
+//   - setUp / tearDown: nonisolated sync で、MainActor 必要部分のみ MainActor.assumeIsolated
 final class AccelerometerChartViewTests: XCTestCase {
     
     // MARK: - Test Properties
@@ -26,16 +26,18 @@ final class AccelerometerChartViewTests: XCTestCase {
     private var viewModel: AccelerometerChartViewModel!
     
     // MARK: - Setup & Teardown
-    // クラスが @MainActor 化されているため setUp も MainActor isolated。
-    // XCTestCase.setUp() は nonisolated override 制約があるため、async 形式を採用する。
+    // ISSUE-032 (案 Y): クラス全体 @MainActor 化を避け、setUp/tearDown を個別 @MainActor 化。
+    // async override 形式により XCTestCase の nonisolated 基底メソッドからアクター隔離を追加可能。
+    // テストクラス本体は nonisolated を維持し、将来非 MainActor サービスを呼ぶ際の波及を防ぐ。
+    @MainActor
     override func setUp() async throws {
         try await super.setUp()
         setupTestData()
         setupTestFile()
         setupNewArchitectureComponents()
     }
-    
-    // クラスが @MainActor 化されているため tearDown も async 形式（ISSUE-032）。
+
+    @MainActor
     override func tearDown() async throws {
         cleanupTestFile()
         try await super.tearDown()
@@ -120,10 +122,16 @@ final class AccelerometerChartViewTests: XCTestCase {
         return calculateStatisticsUseCase.execute(readings: readings, dataType: dataType)
     }
     
-    private func loadDataFromCSV(fileURL: URL, completion: @escaping ([AccelerometerReading]?, Error?) -> Void) {
+    // ISSUE-032 (案 Y): completion を `@Sendable` 化し、Task 内へ送れるようにする。
+    // テスト helper のため呼び出し側は MainActor で受け取る前提（既存テストの規約）。
+    private func loadDataFromCSV(
+        fileURL: URL,
+        completion: @escaping @Sendable @MainActor ([AccelerometerReading]?, Error?) -> Void
+    ) {
+        let useCase = self.loadDataUseCase!
         Task {
             do {
-                let readings = try await loadDataUseCase.execute(fileURL: fileURL)
+                let readings = try await useCase.execute(fileURL: fileURL)
                 await MainActor.run {
                     completion(readings, nil)
                 }
@@ -261,6 +269,8 @@ extension AccelerometerChartViewTests {
 // MARK: - CalculateStatisticsUseCase Tests
 extension AccelerometerChartViewTests {
     
+    // ISSUE-032 (案 Y): waitForExpectations は @MainActor isolated のため、本テストのみ @MainActor。
+    @MainActor
     func testLoadDataFromCSVWithValidData() {
         let expectation = expectation(description: "CSV読み込み完了")
         var result: [AccelerometerReading]?
@@ -289,6 +299,7 @@ extension AccelerometerChartViewTests {
         }
     }
     
+    @MainActor
     func testLoadDataFromCSVWithInvalidFile() {
         let invalidURL = URL(fileURLWithPath: "/nonexistent/file.csv")
         let expectation = expectation(description: "CSV読み込みエラー")
@@ -307,6 +318,7 @@ extension AccelerometerChartViewTests {
         XCTAssertNil(result, "結果が返されてはいけません")
     }
     
+    @MainActor
     func testLoadDataFromCSVWithEmptyFile() {
         let emptyFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("empty.csv")
         try! "timestamp,x,y,z,magnitude\n".write(to: emptyFileURL, atomically: true, encoding: .utf8)
@@ -329,6 +341,7 @@ extension AccelerometerChartViewTests {
         XCTAssertEqual(result?.count, 0, "空のデータが返される必要があります")
     }
     
+    @MainActor
     func testLoadDataFromCSVWithMalformedData() {
         let malformedCSV = "timestamp,x,y,z,magnitude\ninvalid,data,here,test,xyz\n"
         let malformedURL = FileManager.default.temporaryDirectory.appendingPathComponent("malformed.csv")
@@ -641,6 +654,7 @@ extension AccelerometerChartViewTests {
         }
     }
     
+    @MainActor
     func testCSVLoadingPerformance() {
         // 大きなCSVファイルを作成
         var largeCSV = "timestamp,x,y,z,magnitude\n"
@@ -671,6 +685,7 @@ extension AccelerometerChartViewTests {
 // MARK: - Error Handling Tests
 extension AccelerometerChartViewTests {
     
+    @MainActor
     func testCSVLoadingWithCorruptedFile() {
         let corruptedData = Data([0xFF, 0xFE, 0xFD, 0xFC]) // バイナリデータ
         let corruptedURL = FileManager.default.temporaryDirectory.appendingPathComponent("corrupted.csv")
