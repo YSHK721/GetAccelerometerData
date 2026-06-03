@@ -83,41 +83,12 @@ struct CompactLabelingSkin: View {
 
     @ViewBuilder
     private var videoScrubBar: some View {
-        GeometryReader { geo in
-            let progress = VBTLabelingSkinShared.videoProgress(
-                currentTime: viewModel.currentVideoTime,
-                duration: viewModel.videoDuration
-            )
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color.gray.opacity(0.3)).frame(height: 4)
-                Capsule().fill(Color.blue).frame(width: geo.size.width * progress, height: 4)
-                if viewModel.videoDuration > 0 {
-                    if let s = viewModel.state.syncMarkerVideoStart {
-                        let x = geo.size.width * min(1.0, max(0.0, s / viewModel.videoDuration))
-                        Rectangle().fill(Color.green).frame(width: 2, height: 12).offset(x: x - 1)
-                    }
-                    if let e = viewModel.state.syncMarkerVideoEnd {
-                        let x = geo.size.width * min(1.0, max(0.0, e / viewModel.videoDuration))
-                        Rectangle().fill(Color.orange).frame(width: 2, height: 12).offset(x: x - 1)
-                    }
-                }
-                Circle().fill(Color.blue).frame(width: 10, height: 10)
-                    .offset(x: geo.size.width * progress - 5)
-            }
-            .contentShape(Rectangle())
-            .gesture(
-                LongPressGesture(minimumDuration: 0.5)
-                    .sequenced(before: DragGesture(minimumDistance: 0))
-                    .onChanged { value in
-                        if case .second(true, let drag?) = value {
-                            viewModel.isScrubbing = true
-                            let ratio = min(1.0, max(0.0, drag.location.x / geo.size.width))
-                            viewModel.seek(to: ratio * viewModel.videoDuration)
-                        }
-                    }
-                    .onEnded { _ in viewModel.isScrubbing = false }
-            )
-        }
+        SharedVideoScrubBar(
+            viewModel: viewModel,
+            trackHeight: 4,
+            knobSize: 10,
+            syncLineHeight: 12
+        )
         .frame(height: 16)
     }
 
