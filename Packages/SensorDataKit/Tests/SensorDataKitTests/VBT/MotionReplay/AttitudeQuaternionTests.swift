@@ -35,8 +35,9 @@ final class AttitudeQuaternionTests: XCTestCase {
         let q90 = AttitudeQuaternion(w: cos(half90), x: 0, y: 0, z: sin(half90))
 
         let qMid = AttitudeQuaternion.slerp(from: q0, to: q90, t: 0.5)
-        // 期待値: 45° の半分 = 22.5° 回転 → w = cos(22.5°/...) ←注：補間係数 0.5 で角度は 45° 中間 = 22.5° の半角
-        let halfMid = Double.pi / 8.0                         // 22.5°
+        // q0=0°, q90=90° yaw 間を t=0.5 で SLERP → 中間回転角 45° → 半角 22.5°
+        // → クォータニオン期待値 w=cos(22.5°), z=sin(22.5°)
+        let halfMid = Double.pi / 8.0                         // 半角 22.5° = π/8 rad
         XCTAssertEqual(qMid.w, cos(halfMid), accuracy: 1e-6)
         XCTAssertEqual(qMid.x, 0.0, accuracy: 1e-9)
         XCTAssertEqual(qMid.y, 0.0, accuracy: 1e-9)
