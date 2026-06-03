@@ -84,6 +84,11 @@ struct VBTSessionListView: View {
                 }
             }
 
+            // Phase 5 (Motion Replay PoC): 3D リプレイ画面への導線
+            NavigationLink(destination: MotionReplayView(folderURL: row.folderURL)) {
+                Label("3D リプレイ [PoC]", systemImage: "rotate.3d")
+            }
+
             // Phase D: 共有ボタン
             Button {
                 shareSession(row)
