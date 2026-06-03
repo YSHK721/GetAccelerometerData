@@ -47,6 +47,11 @@ public struct AttitudeQuaternion: Sendable, Equatable {
     /// dot_abs > この値で LERP fallback、それ未満で SLERP を採用
     public static let slerpLerpThreshold: Double = 0.9995
 
+    /// SLERP 分母 sin(Ω) の 0 近傍判定しきい値。
+    /// dotClamped <= slerpLerpThreshold の経路に到達しているため理論上 sinOmega は十分大きいが、
+    /// 浮動小数誤差で 0 近傍に振れた場合の 0 除算回避のための防御（超低発生確率）。
+    private static let sinOmegaEpsilon: Double = 1e-12
+
     /// 2 クォータニオン間の球面線形補間（SLERP）。
     /// 内部設計書 §6 Step 7 の仕様に厳密準拠:
     /// 1. dot < 0 なら b を反転して最短弧を採用
@@ -93,7 +98,7 @@ public struct AttitudeQuaternion: Sendable, Equatable {
         let omega = acos(dotClamped)
         let sinOmega = sin(omega)
         // sinOmega が 0 に近すぎる場合は LERP fallback（理論上ここには来ないが防御）
-        if sinOmega < 1e-12 {
+        if sinOmega < Self.sinOmegaEpsilon {
             return a
         }
         let factorA = sin((1 - t) * omega) / sinOmega

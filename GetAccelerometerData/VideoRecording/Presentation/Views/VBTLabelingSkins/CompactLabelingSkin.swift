@@ -84,8 +84,10 @@ struct CompactLabelingSkin: View {
     @ViewBuilder
     private var videoScrubBar: some View {
         GeometryReader { geo in
-            let progress: Double = viewModel.videoDuration > 0
-                ? min(1.0, max(0.0, viewModel.currentVideoTime / viewModel.videoDuration)) : 0
+            let progress = VBTLabelingSkinShared.videoProgress(
+                currentTime: viewModel.currentVideoTime,
+                duration: viewModel.videoDuration
+            )
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.gray.opacity(0.3)).frame(height: 4)
                 Capsule().fill(Color.blue).frame(width: geo.size.width * progress, height: 4)
@@ -210,7 +212,7 @@ struct CompactLabelingSkin: View {
     private var saveBar: some View {
         VStack(spacing: 2) {
             if !viewModel.state.canSave {
-                Text("欠落: " + viewModel.state.missingRequirements.map(shortMissingLabel).joined(separator: " / "))
+                Text("欠落: " + viewModel.state.missingRequirements.map(VBTLabelingSkinShared.shortMissingLabel).joined(separator: " / "))
                     .font(.system(size: 10))
                     .foregroundStyle(.red)
                     .lineLimit(2)
@@ -234,16 +236,4 @@ struct CompactLabelingSkin: View {
         .background(.thinMaterial)
     }
 
-    private func shortMissingLabel(_ r: LabelingState.MissingRequirement) -> String {
-        switch r {
-        case .syncVideoStart: return "SYNC-S(V)"
-        case .syncVideoEnd:   return "SYNC-E(V)"
-        case .syncImuStart:   return "SYNC-S(I)"
-        case .syncImuEnd:     return "SYNC-E(I)"
-        case .atLeastOneRep:  return "BOTTOM未"
-        case .bottomTimeMissing(let i): return "#\(i)bottom欠"
-        case .syncVideoOrderInvalid: return "V順不正"
-        case .syncImuOrderInvalid:   return "I順不正"
-        }
-    }
 }

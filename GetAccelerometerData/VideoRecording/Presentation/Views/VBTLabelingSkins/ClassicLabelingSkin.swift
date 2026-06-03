@@ -87,10 +87,10 @@ struct ClassicLabelingSkin: View {
     @ViewBuilder
     private var videoScrubBar: some View {
         GeometryReader { geo in
-            let progress: Double = {
-                guard viewModel.videoDuration > 0 else { return 0 }
-                return min(1.0, max(0.0, viewModel.currentVideoTime / viewModel.videoDuration))
-            }()
+            let progress = VBTLabelingSkinShared.videoProgress(
+                currentTime: viewModel.currentVideoTime,
+                duration: viewModel.videoDuration
+            )
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.gray.opacity(0.3)).frame(height: 6)
                 Capsule().fill(Color.blue).frame(width: geo.size.width * progress, height: 6)
