@@ -485,3 +485,20 @@
 - **根本原因**: (1) `BuildError` が `LocalizedError` 未準拠で、`error.localizedDescription` が既定の NSError 表現（`<module>.<type> error <case-index>`）を返していた。`error 1` は宣言順 2 番目の `converterFailed`。(2) `LabelingState.missingRequirements` が「マーカー 4 点と rep ≥ 1」のみを判定し、SyncMarker 不変条件（`endTime > startTime`）および VideoToUnifiedConverter の `videoSpan != 0` を SAVE 前に検証していなかった。結果として UI 上 `canSave=true` のまま `buildPayload()` 内で `SyncMarker.init` → `ValidationError.endNotAfterStart` が発生し `BuildError.converterFailed` にラップされていた。
 - **実施内容**: (1) `MissingRequirement` に `.syncVideoOrderInvalid` / `.syncImuOrderInvalid` を追加し、4 点が揃っている時のみ `end <= start` を判定（欠落エラーとの二重表示を防止）。(2) `BuildError` を `LocalizedError` 準拠とし、`errorDescription` で「確定条件未充足: <要素名>」「SYNC マーカーの整合性エラー: 動画/IMU の START と END が逆転または同値のため線形補正できません」「rep ラベルの検証に失敗しました」を返却。(3) `VBTLabelingView.missingLabel` に新ケース 2 件を追加。(4) `LabelingStateTests` に順序逆転/同値/SYNC 未記録時の二重表示防止/localizedDescription の 5 テストを追加（合計 15 件全件パス）。
 - **検証結果**: `swift test --filter LabelingStateTests` 15/15 パス、`xcodebuild -scheme GetAccelerometerData -destination 'generic/platform=iOS' build` BUILD SUCCEEDED。実機検証（2026-06-03 提供スクリーンショット「エラー確認:欠落要素_SYNC （IMU）順序不正（END > START でない）.PNG」）にて、SYNC IMU START/END を逆転させた状態で SAVE ボタンが灰色化（disabled）し、欠落要素欄に「SYNC (IMU) 順序不正（END > START でない）」が表示されることを確認。
+
+---
+
+## ISSUE-028
+
+- **発生日**: 2026-06-03
+- **解決日**: 2026-06-03
+- **タイトル**: VBT ラベリングで SYNC START/END の位置がビジュアルに確認できず、正しく設定できているか即座に判らない
+- **重大度**: Low（UX 改善）
+- **ステータス**: RESOLVED（実機検証待ち）
+- **発生工程**: VBT Ground Truth Tool Phase C ラベリング画面（仕様書 §10）
+- **該当ファイル**: `GetAccelerometerData/VideoRecording/Presentation/Views/VBTLabelingView.swift`
+- **概要**: SYNC START/END (Video/IMU) を記録しても、`timeAxisDisplay` の数値表示しか確認手段がなく、(1) 4 点が実際に IMU 波形・動画タイムライン上のどの位置に置かれたのか、(2) 現在の再生位置・カーソル位置との相対関係はどうなっているのか、をビジュアルに即時把握できない。ユーザーは ISSUE-027 で順序不正は検出できるようになったが、依然「位置がそもそも合っているか」の確認は数値だけで行わざるを得ず、誤設定の自己発見が困難だった。
+- **根本原因**: ラベリング画面の初期実装で SYNC マーカーの数値保持と SAVE 時の使用のみが実装され、SYNC マーカーを画面上の幾何要素として描画する表示層実装が欠落していた。
+- **実施内容**: (1) `imuWaveformView` の Swift Charts に `RuleMark` を 2 本追加し、`viewModel.state.syncMarkerImuStart`（緑・実線・`S` アノテーション）と `syncMarkerImuEnd`（橙・実線・`E` アノテーション）を波形上に描画。現在カーソル（赤・破線）と色分け。(2) `videoScrubBar` の `ZStack` に縦線（緑 / 橙、幅 2pt × 高さ 18pt）を `videoDuration` 比率位置に追加し、Video SYNC START/END をスクラブバー上に重畳。再生位置（青丸）と色分け。
+- **検証結果**: `xcodebuild -scheme GetAccelerometerData -destination 'generic/platform=iOS' build` BUILD SUCCEEDED。実機で SYNC START/END を記録した直後に (a) IMU 波形上に緑/橙の縦線と `S`/`E` ラベルが現れる、(b) 動画スクラブバー上の対応位置に同色の縦線が現れる、ことをユーザー検証予定。
+- **副次効果**: SYNC START/END の物理マーカー対応（動画上のタップ瞬間 ↔ IMU 上の加速度ピーク）が視認可能になり、ISSUE-027 で検出される順序不正の自己診断が大幅に容易化される。

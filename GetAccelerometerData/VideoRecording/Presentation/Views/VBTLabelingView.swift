@@ -91,6 +91,24 @@ struct VBTLabelingView: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.gray.opacity(0.3)).frame(height: 6)
                 Capsule().fill(Color.blue).frame(width: geo.size.width * progress, height: 6)
+                // ISSUE-028: Video 側 SYNC マーカーをスクラブバー上に可視化。
+                // START=緑 / END=橙 で IMU 側と統一し、再生位置（青丸）と区別する。
+                if viewModel.videoDuration > 0 {
+                    if let s = viewModel.state.syncMarkerVideoStart {
+                        let x = geo.size.width * min(1.0, max(0.0, s / viewModel.videoDuration))
+                        Rectangle()
+                            .fill(Color.green)
+                            .frame(width: 2, height: 18)
+                            .offset(x: x - 1)
+                    }
+                    if let e = viewModel.state.syncMarkerVideoEnd {
+                        let x = geo.size.width * min(1.0, max(0.0, e / viewModel.videoDuration))
+                        Rectangle()
+                            .fill(Color.orange)
+                            .frame(width: 2, height: 18)
+                            .offset(x: x - 1)
+                    }
+                }
                 Circle()
                     .fill(Color.blue)
                     .frame(width: 14, height: 14)
@@ -155,6 +173,24 @@ struct VBTLabelingView: View {
                 RuleMark(x: .value("cursor", cursorRel))
                     .foregroundStyle(.red)
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                // ISSUE-028: IMU 側 SYNC マーカーを波形上に可視化。
+                // START=緑 / END=橙 で色分けし、現在カーソル（赤）と区別する。
+                if let s = viewModel.state.syncMarkerImuStart {
+                    RuleMark(x: .value("SYNC start (IMU)", s - base))
+                        .foregroundStyle(.green)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5))
+                        .annotation(position: .top, alignment: .leading) {
+                            Text("S").font(.caption2.bold()).foregroundStyle(.green)
+                        }
+                }
+                if let e = viewModel.state.syncMarkerImuEnd {
+                    RuleMark(x: .value("SYNC end (IMU)", e - base))
+                        .foregroundStyle(.orange)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5))
+                        .annotation(position: .top, alignment: .trailing) {
+                            Text("E").font(.caption2.bold()).foregroundStyle(.orange)
+                        }
+                }
             }
             .frame(height: 140)
             .padding(.horizontal)
