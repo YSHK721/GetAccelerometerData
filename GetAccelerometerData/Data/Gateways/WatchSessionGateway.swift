@@ -112,20 +112,65 @@ class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
             if let router = router {
                 let originURL = file.fileURL
                 let metadata = file.metadata
+
+                // ISSUE-023: WCSession の仕様上、本 delegate メソッドが return した瞬間に
+                // `file.fileURL` が指す一時ファイルは iOS により削除される。
+                // 後続の async Task（Use Case）が `importIMUFile` を呼ぶ時点で
+                // 元ファイルが消失しており "no such file" で失敗していた。
+                // delegate スコープ内で同期コピーし、安定 URL を Task へ受け渡す。
+                let fileManager = FileManager.default
+                let stableURL = fileManager.temporaryDirectory
+                    .appendingPathComponent("vbt_imu_inbox_\(UUID().uuidString)_\(originURL.lastPathComponent)")
+                do {
+                    if fileManager.fileExists(atPath: stableURL.path) {
+                        try fileManager.removeItem(at: stableURL)
+                    }
+                    try fileManager.copyItem(at: originURL, to: stableURL)
+                } catch {
+                    print("[WatchSessionGateway] VBT IMU 一時保存失敗: \(error.localizedDescription)")
+                    if WCSession.isSupported() {
+                        WCSession.default.sendMessage(
+                            ["status": "error", "reason": "inbox copy failed: \(error.localizedDescription)"],
+                            replyHandler: nil,
+                            errorHandler: { _ in }
+                        )
+                    }
+                    DispatchQueue.main.async {
+                        self.isTransferring = false
+                        self.lastMessage = "VBT IMU 一時保存失敗: \(error.localizedDescription)"
+                    }
+                    return
+                }
+
                 DispatchQueue.main.async {
                     self.isTransferring = true
                     self.lastMessage = "VBT IMU 受信中..."
                 }
-                router.handleIMUFileReceived(sourceURL: originURL, metadata: metadata) { [weak self] ok in
+                router.handleIMUFileReceived(sourceURL: stableURL, metadata: metadata) { [weak self] ok, reason in
+                    // ISSUE-023: 安定コピーは Use Case が importIMUFile で copyItem しただけなので
+                    // この時点で削除して問題ない（成功・失敗いずれでも掃除する）。
+                    try? FileManager.default.removeItem(at: stableURL)
+
                     // 完了通知を Watch 側に送る（仕様書 §6 step 12 ACK）
-                    let reply: [String: Any] = ok ? ["status": "ack"] : ["status": "error"]
+                    // ISSUE-022: 失敗時は reason を Watch 側にも返し、診断可能にする
+                    var reply: [String: Any] = ok ? ["status": "ack"] : ["status": "error"]
+                    if !ok, let reason = reason {
+                        reply["reason"] = reason
+                        print("[WatchSessionGateway] VBT IMU 受信失敗 reason=\(reason)")
+                    }
                     // WCSession は Sendable ではないため、コールバック時点で再取得する。
                     if WCSession.isSupported() {
-                        WCSession.default.sendMessage(reply, replyHandler: nil, errorHandler: { _ in })
+                        WCSession.default.sendMessage(reply, replyHandler: nil, errorHandler: { err in
+                            print("[WatchSessionGateway] ACK sendMessage error: \(err.localizedDescription)")
+                        })
                     }
                     DispatchQueue.main.async {
                         self?.isTransferring = false
-                        self?.lastMessage = ok ? "VBT セッション保存完了" : "VBT IMU 受信エラー"
+                        if ok {
+                            self?.lastMessage = "VBT セッション保存完了"
+                        } else {
+                            self?.lastMessage = "VBT IMU 受信エラー: \(reason ?? "unknown")"
+                        }
                     }
                 }
                 return

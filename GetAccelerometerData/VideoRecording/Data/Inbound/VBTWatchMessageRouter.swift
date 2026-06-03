@@ -24,10 +24,32 @@ final class VBTWatchMessageRouter: @unchecked Sendable {
     static let fileTypeKey = "fileType"
     static let fileNameKey = "fileName"
 
+    /// ISSUE-021: Use Case 状態遷移を Presentation 層へ広報するための Notification。
+    /// `VBTReceptionUseCase.state` は `@Published` ではないため、本通知が
+    /// View Model 側の `refreshStatus()` 再実行トリガとして機能する。
+    static let stateDidChangeNotification = Notification.Name("VBTWatchMessageRouter.stateDidChange")
+
     private let useCase: VBTReceptionUseCase
 
     init(useCase: VBTReceptionUseCase) {
         self.useCase = useCase
+    }
+
+    /// ISSUE-021: Use Case の await 完了直後に呼ぶ。NotificationCenter は thread-safe で
+    /// あり、購読側（View Model）が `@MainActor` で `refreshStatus()` を実行する。
+    ///
+    /// ISSUE-022: 失敗時の `reason` を userInfo に載せて View Model 側へ伝搬する。
+    /// 仕様書の `.failed` 表示「再試行してください」だけでは原因不明のため診断不能だった。
+    private func notifyStateDidChange(reason: String? = nil) {
+        var userInfo: [AnyHashable: Any] = [:]
+        if let reason = reason {
+            userInfo["reason"] = reason
+        }
+        NotificationCenter.default.post(
+            name: Self.stateDidChangeNotification,
+            object: nil,
+            userInfo: userInfo.isEmpty ? nil : userInfo
+        )
     }
 
     /// `vbt.startRecording` のメッセージか判定
@@ -53,8 +75,11 @@ final class VBTWatchMessageRouter: @unchecked Sendable {
             let result = await useCase.handleStartRecordingRequest()
             switch result {
             case .acknowledged:
+                self.notifyStateDidChange()
                 replyHandler(["status": "ack"])
             case .error(let reason):
+                print("[VBTWatchMessageRouter] start error: \(reason)")
+                self.notifyStateDidChange(reason: reason)
                 replyHandler(["status": "error", "reason": reason])
             }
         }
@@ -64,21 +89,25 @@ final class VBTWatchMessageRouter: @unchecked Sendable {
     func handleStopRecording(replyHandler: @escaping @Sendable ([String: Any]) -> Void) {
         Task { [useCase] in
             await useCase.handleStopRecordingRequest()
+            self.notifyStateDidChange()
             replyHandler(["status": "ack"])
         }
     }
 
     /// IMU CSV ファイル受信完了時のハンドリング。
     /// metadata["imu_start_timestamp"] が無い場合は 0 として扱う（後段で labels.json 生成時にエラー検知）。
-    func handleIMUFileReceived(sourceURL: URL, metadata: [String: Any]?, completion: @escaping @Sendable (Bool) -> Void) {
+    func handleIMUFileReceived(sourceURL: URL, metadata: [String: Any]?, completion: @escaping @Sendable (Bool, String?) -> Void) {
         let imuStart: TimeInterval = (metadata?[Self.imuStartTimestampKey] as? Double) ?? 0
         Task { [useCase] in
             let result = await useCase.handleIMUFileReceived(source: sourceURL, imuStartTimestamp: imuStart)
             switch result {
             case .acknowledged:
-                completion(true)
-            case .error:
-                completion(false)
+                self.notifyStateDidChange()
+                completion(true, nil)
+            case .error(let reason):
+                print("[VBTWatchMessageRouter] IMU receive error: \(reason)")
+                self.notifyStateDidChange(reason: reason)
+                completion(false, reason)
             }
         }
     }

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 import SensorDataKit
 
 // MARK: - VBTGroundTruthMetaInputViewModel
@@ -27,6 +28,9 @@ final class VBTGroundTruthMetaInputViewModel: ObservableObject {
     @Published private(set) var validationError: String?
     @Published private(set) var isWaitingForWatch: Bool = false
     @Published private(set) var statusText: String = "メタ情報未入力"
+    /// ISSUE-022: Use Case が `.failed` に遷移した際の理由文字列。
+    /// Router の `stateDidChangeNotification` userInfo["reason"] から受け取る。
+    @Published private(set) var lastFailureReason: String?
 
     var canSubmit: Bool {
         VBTGroundTruthMetaInputViewModel.buildInput(
@@ -41,9 +45,26 @@ final class VBTGroundTruthMetaInputViewModel: ObservableObject {
     /// shared composition：UseCase / Adapter は app 寿命と同じ。
     static let shared = VBTGroundTruthComposition()
 
+    /// ISSUE-021: Router 経由の Use Case 状態遷移を観測するための購読。
+    private var stateChangeCancellable: AnyCancellable?
+
     init() {
         // 起動時の現在状態を反映
         refreshStatus()
+
+        // ISSUE-021: Watch からのメッセージで Use Case の状態が更新された際、
+        // View Model が能動的に refreshStatus() を呼ぶ経路を持たないと UI が
+        // 「Watch 記録開始待機中」のまま固まる。Router が広報する通知を購読する。
+        stateChangeCancellable = NotificationCenter.default
+            .publisher(for: VBTWatchMessageRouter.stateDidChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] note in
+                // ISSUE-022: 失敗理由を保持し refreshStatus で statusText に反映する。
+                if let reason = note.userInfo?["reason"] as? String {
+                    self?.lastFailureReason = reason
+                }
+                self?.refreshStatus()
+            }
     }
 
     func attachRouterIfNeeded() {
@@ -62,6 +83,8 @@ final class VBTGroundTruthMetaInputViewModel: ObservableObject {
             return
         }
         validationError = nil
+        // ISSUE-022: 新規セッション投入時は前回の失敗理由をクリアする。
+        lastFailureReason = nil
         Self.shared.useCase.setPendingMetadata(input)
         isWaitingForWatch = true
         refreshStatus()
@@ -82,7 +105,12 @@ final class VBTGroundTruthMetaInputViewModel: ObservableObject {
             statusText = "セッション保存完了 (VALID)"
             isWaitingForWatch = false
         case .failed:
-            statusText = "失敗：再試行してください"
+            // ISSUE-022: 失敗理由（reason）を UI に表示し、再試行前に原因を確認可能にする。
+            if let reason = lastFailureReason, !reason.isEmpty {
+                statusText = "失敗：\(reason)"
+            } else {
+                statusText = "失敗：再試行してください"
+            }
             isWaitingForWatch = false
         }
     }

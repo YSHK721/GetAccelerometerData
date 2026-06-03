@@ -48,4 +48,19 @@ final class IMUWaveformLoaderTests: XCTestCase {
         let samples = try IMUWaveformParser.parse(csvString: csv)
         XCTAssertEqual(samples.count, 1)
     }
+
+    // MARK: ISSUE-024 回帰: Watch 側が CSVTimestampFormatter で書き出す日時文字列を受理する
+    func test_parse_acceptsDateStringTimestamp() throws {
+        let csv = """
+        timestamp,accel_x,accel_y,accel_z,accel_magnitude,gyro_x,gyro_y,gyro_z,gyro_magnitude
+        2026-06-02 20:52:17.000000,0.1,0.2,0.3,1.25,0.0,0.0,0.0,0.0
+        2026-06-02 20:52:17.010000,0.2,0.3,0.4,1.75,0.0,0.0,0.0,0.0
+        """
+        let samples = try IMUWaveformParser.parse(csvString: csv)
+        XCTAssertEqual(samples.count, 2)
+        XCTAssertEqual(samples[0].accelMagnitude, 1.25, accuracy: 1e-6)
+        XCTAssertEqual(samples[1].accelMagnitude, 1.75, accuracy: 1e-6)
+        // 隣接行の差分が 10ms（書き出し側の固定刻み）であることを確認
+        XCTAssertEqual(samples[1].timestamp - samples[0].timestamp, 0.010, accuracy: 1e-3)
+    }
 }
