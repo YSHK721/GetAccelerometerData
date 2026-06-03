@@ -26,8 +26,10 @@ public struct MotionReplaySceneView: UIViewRepresentable {
 
     public func makeUIView(context: Context) -> SCNView {
         let scnView = SCNView()
-        scnView.backgroundColor = .black
-        scnView.autoenablesDefaultLighting = false
+        // 暗灰色の背景にすることで、Watch 本体（ダークグレー）も視認可能にする（黒地に黒は不可）
+        scnView.backgroundColor = UIColor(white: 0.15, alpha: 1.0)
+        // フォールバック描画: 明示ライト設定が効かなくても何かしら見えるよう既定ライトも有効化
+        scnView.autoenablesDefaultLighting = true
         // PoC: カメラは固定（ユーザー操作不可）
         scnView.allowsCameraControl = false
 
@@ -37,10 +39,13 @@ public struct MotionReplaySceneView: UIViewRepresentable {
         // Watch ノード階層を追加
         scene.rootNode.addChildNode(WatchSceneNodeBuilder.build())
 
-        // ライト・カメラを追加
+        // ライト・カメラを追加し、明示的に rendering camera を指定
         scene.rootNode.addChildNode(makeAmbientLightNode())
         scene.rootNode.addChildNode(makeDirectionalLightNode())
-        scene.rootNode.addChildNode(makeCameraNode())
+        let cameraNode = makeCameraNode()
+        scene.rootNode.addChildNode(cameraNode)
+        // 明示的に pointOfView を設定（自動検出に依存しない）
+        scnView.pointOfView = cameraNode
 
         return scnView
     }
@@ -77,13 +82,14 @@ public struct MotionReplaySceneView: UIViewRepresentable {
     private func makeAmbientLightNode() -> SCNNode {
         let light = SCNLight()
         light.type = .ambient
-        light.intensity = 300
+        // 暗いダークグレーマテリアル + 黒/暗灰背景でも視認できる明るさに引き上げ
+        light.intensity = 800
         light.color = UIColor.white
 
         let node = SCNNode()
         node.name = "ambientLight"
-        node.light = light
         node.position = SCNVector3(0, 0, 0)
+        node.light = light
         return node
     }
 
@@ -103,13 +109,17 @@ public struct MotionReplaySceneView: UIViewRepresentable {
     private func makeCameraNode() -> SCNNode {
         let camera = SCNCamera()
         camera.fieldOfView = 60
+        // 近接面・遠面を明示的に設定（既定値で Watch サイズ 0.04m がクリップされる可能性を排除）
+        camera.zNear = 0.001
+        camera.zFar = 10
 
         let node = SCNNode()
         node.name = "camera"
         node.camera = camera
-        node.position = SCNVector3(0, 0, 0.25)
-        // 原点を向く（iOS 11+）
-        node.look(at: SCNVector3Zero)
+        // バンド込み全高 0.155m を視野内に余裕を持って収めるため少し後退
+        node.position = SCNVector3(0, 0, 0.3)
+        // 原点を向く（iOS 11+）。SCNVector3Zero は使わず明示初期化
+        node.look(at: SCNVector3(0, 0, 0))
         return node
     }
 }
