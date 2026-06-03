@@ -556,10 +556,10 @@
 ## ISSUE-032
 
 - **発生日**: 2026-06-04
-- **解決日**: -（OPEN）
+- **解決日**: 2026-06-04
 - **タイトル**: `GetAccelerometerDataTests/AccelerometerChartViewTests.swift` が削除済 API（`formatDuration` / `SelectableAccelerometerChartComponent`）参照 + Swift 6 strict concurrency 違反で コンパイル不能
 - **重大度**: Medium（テストカバレッジ消失）
-- **ステータス**: OPEN
+- **ステータス**: RESOLVED
 - **発生工程**: 既存 iOS テスト（ISSUE-031 解消中に発見）
 - **該当ファイル**: `GetAccelerometerDataTests/AccelerometerChartViewTests.swift.todo`（ISSUE-031 解消時に `.swift` から `.todo` にリネームしてビルドから一時除外）
 - **概要**: 当該テストは以下 4 種類の破損を抱え iOS test target のコンパイルをブロックしていた:
@@ -569,4 +569,5 @@
   4. `@Sendable` closure 内の `result1` / `result2` ローカル var 変更（L619, L626）
 - **影響**: 当該テストファイルが提供していたチャート ViewModel + Statistics UseCase のテストが消失。ただし対応する本体機能テストは別途 `CalculateStatisticsUseCaseTests`（SensorDataKit）等で部分カバー。
 - **対策案**: 4 種類の破損を順次解消（`formatDuration` 相当の現行 API 確認、`SelectableAccelerometerChartComponent` の代替探索、setUp の `MainActor.assumeIsolated` パターン適用、closure 内 mutation を `inout` または class wrapper で回避）。本タスクは ISSUE-031 のスコープを超えるため別タスク。
-- **検証結果**: -（未着手）
+- **実施内容**: (1) クラス全体に `@MainActor` を付与して 13 箇所の Sendable/sending 違反を一括解消、(2) `setUp` / `tearDown` を `async throws` 形式に変更、(3) `formatDuration` ヘルパー + `testFormatDuration()` を削除（本体 API 削除済のため）、(4) `testSelectableAccelerometerChartComponentCreation()` を削除（本体型削除済のため）、(5) `testConcurrentDataLoading` / `testConcurrentStatisticsCalculation` を `DispatchQueue + 完了ハンドラ` から `async let` の構造化並行に書き換え、`@Sendable` closure 内ローカル var 代入を排除。
+- **検証結果**: `xcodebuild -only-testing:GetAccelerometerDataTests/AccelerometerChartViewTests test` TEST SUCCEEDED、`xcodebuild -only-testing:GetAccelerometerDataTests test`（iOS テスト target 全体）TEST SUCCEEDED。SwiftPM 202/202 維持。`.todo` から `.swift` に復元。

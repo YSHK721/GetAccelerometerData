@@ -7,6 +7,11 @@ import UniformTypeIdentifiers
 // MARK: - AccelerometerChartView テストファイル
 // リファクタリング前の安全性基準確立のためのテストスイート
 
+// ISSUE-032: Swift 6 strict concurrency 対応として、クラス全体を @MainActor に統一。
+// XCTestCase の async test メソッドおよび waitForExpectations / DispatchQueue 呼び出しは
+// MainActor 内で完結するため、データ競合警告を一括解消する。
+// XCTest framework は MainActor isolated 派生クラスを許容する。
+@MainActor
 final class AccelerometerChartViewTests: XCTestCase {
     
     // MARK: - Test Properties
@@ -21,18 +26,19 @@ final class AccelerometerChartViewTests: XCTestCase {
     private var viewModel: AccelerometerChartViewModel!
     
     // MARK: - Setup & Teardown
-    @MainActor
-    override func setUp() {
-        super.setUp()
+    // クラスが @MainActor 化されているため setUp も MainActor isolated。
+    // XCTestCase.setUp() は nonisolated override 制約があるため、async 形式を採用する。
+    override func setUp() async throws {
+        try await super.setUp()
         setupTestData()
         setupTestFile()
-        // MainActorでの初期化を同期的に実行
         setupNewArchitectureComponents()
     }
     
-    override func tearDown() {
+    // クラスが @MainActor 化されているため tearDown も async 形式（ISSUE-032）。
+    override func tearDown() async throws {
         cleanupTestFile()
-        super.tearDown()
+        try await super.tearDown()
     }
     
     // MARK: - Test Data Setup
@@ -107,11 +113,9 @@ final class AccelerometerChartViewTests: XCTestCase {
     }
     
     // MARK: - Helper Methods for New Architecture
-    @MainActor
-    private func formatDuration(seconds: TimeInterval) -> String {
-        return viewModel.formatDuration(seconds: seconds)
-    }
-    
+    // ISSUE-032: `viewModel.formatDuration(seconds:)` は本体側で削除済のため、
+    // ヘルパー + testFormatDuration() 共に削除した。
+
     private func calculateStatistics(readings: [AccelerometerReading], dataType: DataType) -> DataStatistics {
         return calculateStatisticsUseCase.execute(readings: readings, dataType: dataType)
     }
@@ -410,18 +414,7 @@ extension AccelerometerChartViewTests {
 // MARK: - Format Duration Tests
 extension AccelerometerChartViewTests {
     
-    @MainActor
-    func testFormatDuration() {
-        XCTAssertNotNil(formatDuration(seconds: 0), "0秒の書式設定が機能する必要があります")
-        XCTAssertNotNil(formatDuration(seconds: 60), "1分の書式設定が機能する必要があります")
-        XCTAssertNotNil(formatDuration(seconds: 3661), "1時間1分1秒の書式設定が機能する必要があります")
-        
-        let formattedShort = formatDuration(seconds: 30)
-        XCTAssertTrue(formattedShort.contains("30") || formattedShort.contains("秒"), "短時間の書式設定が適切である必要があります")
-        
-        let formattedLong = formatDuration(seconds: 125)
-        XCTAssertTrue(formattedLong.contains("2") || formattedLong.contains("分"), "長時間の書式設定が適切である必要があります")
-    }
+    // ISSUE-032: testFormatDuration() は本体側 viewModel.formatDuration 削除に伴い削除。
 }
 
 // MARK: - Chart Component Value Extraction Tests
@@ -456,11 +449,8 @@ extension AccelerometerChartViewTests {
         XCTAssertNotNil(component, "AccelerometerChartComponentが正しく作成される必要があります")
     }
     
-    func testSelectableAccelerometerChartComponentCreation() {
-        let component = SelectableAccelerometerChartComponent(readings: sampleReadings, selectedDataType: .all)
-        XCTAssertNotNil(component, "SelectableAccelerometerChartComponentが正しく作成される必要があります")
-    }
-    
+    // ISSUE-032: `SelectableAccelerometerChartComponent` は本体側で削除済のため、対応テストを削除。
+
     func testZoomableAccelerometerChartComponentCreation() {
         let component = ZoomableAccelerometerChartComponent(readings: sampleReadings, selectedDataType: .all)
         XCTAssertNotNil(component, "ZoomableAccelerometerChartComponentが正しく作成される必要があります")
@@ -603,60 +593,34 @@ extension AccelerometerChartViewTests {
 // MARK: - Concurrent Access Tests
 extension AccelerometerChartViewTests {
     
-    func testConcurrentDataLoading() {
-        let expectation1 = expectation(description: "第1の同時読み込み")
-        let expectation2 = expectation(description: "第2の同時読み込み")
-        
-        var result1: [AccelerometerReading]?
-        var result2: [AccelerometerReading]?
-        
-        // 同時に2つのファイル読み込みを実行
-        DispatchQueue.global().async {
-            self.loadDataFromCSV(fileURL: self.testFileURL) { readings, _ in
-                result1 = readings
-                expectation1.fulfill()
-            }
+    func testConcurrentDataLoading() async throws {
+        // ISSUE-032: Swift 6 strict concurrency 対応。
+        // DispatchQueue + @Sendable closure に依存しない構造化並行（async let）で書き直す。
+        guard let testURL = self.testFileURL, let useCase = self.loadDataUseCase else {
+            XCTFail("test setup incomplete")
+            return
         }
-        
-        DispatchQueue.global().async {
-            self.loadDataFromCSV(fileURL: self.testFileURL) { readings, _ in
-                result2 = readings
-                expectation2.fulfill()
-            }
-        }
-        
-        waitForExpectations(timeout: 10.0)
-        
-        XCTAssertNotNil(result1, "第1の結果が返される必要があります")
-        XCTAssertNotNil(result2, "第2の結果が返される必要があります")
-        XCTAssertEqual(result1?.count, result2?.count, "同じ結果が返される必要があります")
+        async let r1 = useCase.execute(fileURL: testURL)
+        async let r2 = useCase.execute(fileURL: testURL)
+        let (result1, result2) = try await (r1, r2)
+        XCTAssertEqual(result1.count, result2.count, "同じ結果が返される必要があります")
     }
-    
-    func testConcurrentStatisticsCalculation() {
-        let expectation1 = expectation(description: "第1の統計計算")
-        let expectation2 = expectation(description: "第2の統計計算")
-        
-        var stats1: DataStatistics?
-        var stats2: DataStatistics?
-        
-        DispatchQueue.global().async {
-            stats1 = self.calculateStatistics(readings: self.sampleReadings, dataType: .xAxis)
-            expectation1.fulfill()
+
+    func testConcurrentStatisticsCalculation() async {
+        // ISSUE-032: Swift 6 strict concurrency 対応（async/await + async let）。
+        guard let useCase = self.calculateStatisticsUseCase,
+              let readings: [AccelerometerReading] = self.sampleReadings else {
+            XCTFail("test setup incomplete")
+            return
         }
-        
-        DispatchQueue.global().async {
-            stats2 = self.calculateStatistics(readings: self.sampleReadings, dataType: .xAxis)
-            expectation2.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5.0)
-        
-        XCTAssertNotNil(stats1, "第1の統計が計算される必要があります")
-        XCTAssertNotNil(stats2, "第2の統計が計算される必要があります")
-        XCTAssertEqual(stats1?.maxValue, stats2?.maxValue, "同じ統計結果が返される必要があります")
-        XCTAssertEqual(stats1?.average, stats2?.average, "同じ統計結果が返される必要があります")
+        async let s1 = Task.detached { useCase.execute(readings: readings, dataType: .xAxis) }.value
+        async let s2 = Task.detached { useCase.execute(readings: readings, dataType: .xAxis) }.value
+        let (stats1, stats2) = await (s1, s2)
+        XCTAssertEqual(stats1.maxValue, stats2.maxValue, "同じ統計結果が返される必要があります")
+        XCTAssertEqual(stats1.average, stats2.average, "同じ統計結果が返される必要があります")
     }
 }
+
 
 // MARK: - Performance Tests
 extension AccelerometerChartViewTests {
