@@ -26,10 +26,10 @@ public struct MotionReplaySceneView: UIViewRepresentable {
 
     public func makeUIView(context: Context) -> SCNView {
         let scnView = SCNView()
-        // 暗灰色の背景にすることで、Watch 本体（ダークグレー）も視認可能にする（黒地に黒は不可）
+        // 暗灰色の背景: Watch 本体（ダークグレー）と十分なコントラスト
         scnView.backgroundColor = UIColor(white: 0.15, alpha: 1.0)
-        // フォールバック描画: 明示ライト設定が効かなくても何かしら見えるよう既定ライトも有効化
-        scnView.autoenablesDefaultLighting = true
+        // 明示ライト構成で十分明るいため、デフォルトライトは無効化（重畳による washed out 回避）
+        scnView.autoenablesDefaultLighting = false
         // PoC: カメラは固定（ユーザー操作不可）
         scnView.allowsCameraControl = false
 
@@ -116,9 +116,9 @@ public struct MotionReplaySceneView: UIViewRepresentable {
         let node = SCNNode()
         node.name = "camera"
         node.camera = camera
-        // バンド込み全高 0.155m を視野内に余裕を持って収めるため少し後退
-        node.position = SCNVector3(0, 0, 0.3)
-        // 原点を向く（iOS 11+）。SCNVector3Zero は使わず明示初期化
+        // バンド込み全高 0.155m を視野内に余裕を持って収めるため、縦長端末でも切れない位置まで後退。
+        // FOV 60° at z=0.4 で可視高さ = 2 * 0.4 * tan(30°) ≈ 0.462m → Watch 0.155m は約 33% で余裕。
+        node.position = SCNVector3(0, 0, 0.4)
         node.look(at: SCNVector3(0, 0, 0))
         return node
     }
