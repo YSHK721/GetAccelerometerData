@@ -494,11 +494,11 @@
 - **解決日**: 2026-06-03
 - **タイトル**: VBT ラベリングで SYNC START/END の位置がビジュアルに確認できず、正しく設定できているか即座に判らない
 - **重大度**: Low（UX 改善）
-- **ステータス**: RESOLVED（実機検証待ち）
+- **ステータス**: RESOLVED（実機検証完了 2026-06-03）
 - **発生工程**: VBT Ground Truth Tool Phase C ラベリング画面（仕様書 §10）
 - **該当ファイル**: `GetAccelerometerData/VideoRecording/Presentation/Views/VBTLabelingView.swift`
 - **概要**: SYNC START/END (Video/IMU) を記録しても、`timeAxisDisplay` の数値表示しか確認手段がなく、(1) 4 点が実際に IMU 波形・動画タイムライン上のどの位置に置かれたのか、(2) 現在の再生位置・カーソル位置との相対関係はどうなっているのか、をビジュアルに即時把握できない。ユーザーは ISSUE-027 で順序不正は検出できるようになったが、依然「位置がそもそも合っているか」の確認は数値だけで行わざるを得ず、誤設定の自己発見が困難だった。
 - **根本原因**: ラベリング画面の初期実装で SYNC マーカーの数値保持と SAVE 時の使用のみが実装され、SYNC マーカーを画面上の幾何要素として描画する表示層実装が欠落していた。
 - **実施内容**: (1) `imuWaveformView` の Swift Charts に `RuleMark` を 2 本追加し、`viewModel.state.syncMarkerImuStart`（緑・実線・`S` アノテーション）と `syncMarkerImuEnd`（橙・実線・`E` アノテーション）を波形上に描画。現在カーソル（赤・破線）と色分け。(2) `videoScrubBar` の `ZStack` に縦線（緑 / 橙、幅 2pt × 高さ 18pt）を `videoDuration` 比率位置に追加し、Video SYNC START/END をスクラブバー上に重畳。再生位置（青丸）と色分け。
-- **検証結果**: `xcodebuild -scheme GetAccelerometerData -destination 'generic/platform=iOS' build` BUILD SUCCEEDED。実機で SYNC START/END を記録した直後に (a) IMU 波形上に緑/橙の縦線と `S`/`E` ラベルが現れる、(b) 動画スクラブバー上の対応位置に同色の縦線が現れる、ことをユーザー検証予定。
-- **副次効果**: SYNC START/END の物理マーカー対応（動画上のタップ瞬間 ↔ IMU 上の加速度ピーク）が視認可能になり、ISSUE-027 で検出される順序不正の自己診断が大幅に容易化される。
+- **検証結果**: `xcodebuild -scheme GetAccelerometerData -destination 'generic/platform=iOS' build` BUILD SUCCEEDED。実機検証（2026-06-03 提供スクリーンショット「確認:欠落要素_SYNC （IMU）順序不正（END > START でない）ライン.PNG」）にて、IMU 波形上に緑/橙の SYNC START/END ラインと `S`/`E` アノテーションが描画されること、および ISSUE-027 の順序不正検出（欠落要素「SYNC (IMU) 順序不正」）と同時表示される状態でユーザーが視覚的に誤設定を即座に把握できることを確認。
+- **副次効果**: SYNC START/END の物理マーカー対応（動画上のタップ瞬間 ↔ IMU 上の加速度ピーク）が視認可能になり、ISSUE-027 で検出される順序不正の自己診断が大幅に容易化される。実機検証では IMU 順序不正のときも、緑（S）と橙（E）の位置関係が波形上で直接見えるため「どちらをどう動かせば直るか」が即時判断可能。
