@@ -47,15 +47,18 @@ public struct MotionReplayView: View {
                 // スクラブバー
                 GeometryReader { geo in
                     let duration = viewModel.state.series.duration
-                    let progress: Double = duration > 0
-                        ? min(1.0, max(0.0, viewModel.state.currentTime / duration))
-                        : 0.0
+                    let progress = MotionReplayScrubMath.progress(
+                        currentTime: viewModel.state.currentTime,
+                        duration: duration
+                    )
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color.gray.opacity(0.3)).frame(height: 6)
                         Capsule().fill(Color.blue).frame(width: geo.size.width * progress, height: 6)
-                        // ノブ x を [0, width - 14] にクランプし、初期レイアウト時の左端はみ出し（x = -7）を回避
-                        Circle().fill(Color.blue).frame(width: 14, height: 14)
-                            .offset(x: max(0, min(geo.size.width - 14, geo.size.width * progress - 7)))
+                        // ノブ x をクランプし、初期レイアウト時の左端はみ出しを回避（既定 14pt）
+                        Circle().fill(Color.blue)
+                            .frame(width: MotionReplayScrubMath.defaultKnobSize,
+                                   height: MotionReplayScrubMath.defaultKnobSize)
+                            .offset(x: MotionReplayScrubMath.knobOffsetX(progress: progress, width: geo.size.width))
                     }
                     .contentShape(Rectangle())
                     .gesture(
@@ -63,8 +66,12 @@ public struct MotionReplayView: View {
                             .sequenced(before: DragGesture(minimumDistance: 0))
                             .onChanged { value in
                                 if case .second(true, let drag?) = value, duration > 0 {
-                                    let ratio = min(1.0, max(0.0, drag.location.x / geo.size.width))
-                                    viewModel.seek(to: ratio * duration)
+                                    let t = MotionReplayScrubMath.currentTimeFromDragLocation(
+                                        x: drag.location.x,
+                                        width: geo.size.width,
+                                        duration: duration
+                                    )
+                                    viewModel.seek(to: t)
                                 }
                             }
                     )

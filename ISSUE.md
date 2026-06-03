@@ -535,3 +535,19 @@
 - **実施内容**: 5 種類デザインスキン（Classic / Compact / Dark Pro / Chart-Centric / Card-Based）を新設し、Segmented Picker で切替可能な `VBTLabelingSkinnedView` 容器を実装。共有 ViewModel 経由で全スキンが同じビジネスロジックを利用。VBTSessionListView に「ラベリング [Skin]」NavigationLink 1 件追加。既存 VBTLabelingView は無変更。
 - **検証結果**: iOS BUILD SUCCEEDED、5 スキン全てに既存 VBTLabelingView 等価の IMU 波形スクラブジェスチャを実装。
 - **副次効果**: 後段で気に入ったスキンを正式採用する判断材料が揃った。
+
+---
+
+## ISSUE-031
+
+- **発生日**: 2026-06-04
+- **解決日**: -（OPEN）
+- **タイトル**: `GetAccelerometerDataTests/CSVValidationTests.swift` が存在しない `DataExportService.validateCSVFormat` を参照し iOS test target がコンパイル失敗
+- **重大度**: Medium（テスト実行不能、CI 影響あり）
+- **ステータス**: OPEN
+- **発生工程**: 既存 iOS テスト（Phase B 追加実装中に発見）
+- **該当ファイル**: `GetAccelerometerDataTests/CSVValidationTests.swift`（line 16, 31, 46, 61, 77）
+- **概要**: `DataExportService.validateCSVFormat(_:)` は責務移管されているが、当該テストは旧 API 名でアクセスし続けており、`xcodebuild test -destination 'platform=iOS Simulator'` がコンパイル失敗する。Phase B（テストカバレッジ拡充）の変更前から存在する既存破損で本タスク起因ではない。
+- **影響**: (1) 既存 iOS app target テスト全件が実行不能、(2) Phase B で追加した `GetAccelerometerDataTests/VBTLabelingSkinSharedTests.swift`（8 ケース）も同ターゲット内のため Xcode 上で実行不能。なお SensorDataKit パッケージ単体テスト（`swift test`）は影響を受けず 191/191 パス。
+- **対策案**: `CSVValidationTests` 内の `DataExportService.validateCSVFormat` 呼び出し全 5 箇所を `ValidateSensorCSVUseCase` 等の現行 API に書き換える。本対応は別タスクで実施予定。
+- **検証結果**: -（未着手）
