@@ -363,6 +363,9 @@ struct VBTLabelingView: View {
         case .syncImuEnd:     return "SYNC END (IMU) 未記録"
         case .atLeastOneRep:  return "レップが 0 件（BOTTOM を最低1回）"
         case .bottomTimeMissing(let i): return "rep #\(i) の bottom_time 欠落"
+        // ISSUE-027: end <= start の場合に表示する順序エラー。
+        case .syncVideoOrderInvalid: return "SYNC (Video) 順序不正（END > START でない）"
+        case .syncImuOrderInvalid:   return "SYNC (IMU) 順序不正（END > START でない）"
         }
     }
 

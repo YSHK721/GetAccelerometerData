@@ -466,3 +466,22 @@
 - **実施内容**: `VBTLabelingView` の Chart 内部で「録画開始（`viewModel.firstSampleTimestamp`）からの相対秒」を LineMark / RuleMark の X 値として採用するよう変換。内部状態（`imuCursorTime` / sync_markers ベース変換）は仕様書 §8 の線形補正のため UNIX 秒のまま維持し、**表示層でのみ相対秒換算** することで保存形式 / DTO / API 契約はすべて無修正。drag gesture（カーソル長押し移動）も UNIX 秒のまま処理しているため整合性は維持。
 - **検証結果**: iOS ターゲット BUILD SUCCEEDED。実機で X 軸が `0..(録画秒数)` の範囲に正しくスケールされ、波形ピーク・ボトムが視認可能となり、長押しドラッグでカーソルが目視可能な位置に動くことをユーザー検証予定。
 - **副次効果**: 同じ UNIX 秒 → 相対秒変換ロジックは ISSUE-025 で View Model の `relativeCursorTime` として既に提供済みのため、表示層のロジックは局所化されている。
+
+---
+
+## ISSUE-027
+
+- **発生日**: 2026-06-03
+- **解決日**: 2026-06-03
+- **タイトル**: VBT ラベリング SAVE 時に「保存失敗: SensorDataKit.LabelingState.BuildError error 1」と表示され原因が判らない
+- **重大度**: High
+- **ステータス**: RESOLVED（実機検証完了 2026-06-03）
+- **発生工程**: VBT Ground Truth Tool Phase C ラベリング画面（仕様書 §10）
+- **該当ファイル**:
+  - `Packages/SensorDataKit/Sources/SensorDataKit/VBT/LabelingState.swift`
+  - `Packages/SensorDataKit/Tests/SensorDataKitTests/VBT/LabelingStateTests.swift`
+  - `GetAccelerometerData/VideoRecording/Presentation/Views/VBTLabelingView.swift`
+- **概要**: SAVE ボタン押下時にアラート「保存失敗: The operation couldn't be completed. SensorDataKit.LabelingState.BuildError error 1.」が表示され、ユーザーはどのマーカーをどう直せばよいか判断できない。
+- **根本原因**: (1) `BuildError` が `LocalizedError` 未準拠で、`error.localizedDescription` が既定の NSError 表現（`<module>.<type> error <case-index>`）を返していた。`error 1` は宣言順 2 番目の `converterFailed`。(2) `LabelingState.missingRequirements` が「マーカー 4 点と rep ≥ 1」のみを判定し、SyncMarker 不変条件（`endTime > startTime`）および VideoToUnifiedConverter の `videoSpan != 0` を SAVE 前に検証していなかった。結果として UI 上 `canSave=true` のまま `buildPayload()` 内で `SyncMarker.init` → `ValidationError.endNotAfterStart` が発生し `BuildError.converterFailed` にラップされていた。
+- **実施内容**: (1) `MissingRequirement` に `.syncVideoOrderInvalid` / `.syncImuOrderInvalid` を追加し、4 点が揃っている時のみ `end <= start` を判定（欠落エラーとの二重表示を防止）。(2) `BuildError` を `LocalizedError` 準拠とし、`errorDescription` で「確定条件未充足: <要素名>」「SYNC マーカーの整合性エラー: 動画/IMU の START と END が逆転または同値のため線形補正できません」「rep ラベルの検証に失敗しました」を返却。(3) `VBTLabelingView.missingLabel` に新ケース 2 件を追加。(4) `LabelingStateTests` に順序逆転/同値/SYNC 未記録時の二重表示防止/localizedDescription の 5 テストを追加（合計 15 件全件パス）。
+- **検証結果**: `swift test --filter LabelingStateTests` 15/15 パス、`xcodebuild -scheme GetAccelerometerData -destination 'generic/platform=iOS' build` BUILD SUCCEEDED。実機検証（2026-06-03 提供スクリーンショット「エラー確認:欠落要素_SYNC （IMU）順序不正（END > START でない）.PNG」）にて、SYNC IMU START/END を逆転させた状態で SAVE ボタンが灰色化（disabled）し、欠落要素欄に「SYNC (IMU) 順序不正（END > START でない）」が表示されることを確認。
