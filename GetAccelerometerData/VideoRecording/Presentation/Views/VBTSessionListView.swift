@@ -89,6 +89,14 @@ struct VBTSessionListView: View {
                 Label("3D リプレイ [PoC]", systemImage: "rotate.3d")
             }
 
+            // Skin variants: VBT Labeling 画面のデザインバリエーション切替版への導線
+            NavigationLink(destination: VBTLabelingSkinnedView(
+                sessionId: row.entry.folderName,
+                folderURL: row.folderURL
+            )) {
+                Label("ラベリング [Skin]", systemImage: "paintpalette")
+            }
+
             // Phase D: 共有ボタン
             Button {
                 shareSession(row)
