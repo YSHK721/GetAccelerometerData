@@ -54,7 +54,7 @@ public final class MotionReplayViewModel: ObservableObject {
             self.state.isPlaying = false
             self.loadError = nil
         case .failure(let error):
-            self.loadError = Self.humanReadableMessage(for: error)
+            self.loadError = MotionReplayErrorPresenter.message(for: error)
         }
     }
 
@@ -104,31 +104,6 @@ public final class MotionReplayViewModel: ObservableObject {
     }
 
     // MARK: - Error mapping (内部設計書 §9.2 準拠)
-
-    private static func humanReadableMessage(for error: Error) -> String {
-        if let e = error as? AttitudeIMUSourceError {
-            switch e {
-            case .fileNotFound(let path):
-                return "imu.csv が見つかりません: \(path)"
-            case .missingHeader:
-                return "imu.csv が空です（ヘッダなし）"
-            case .missingRequiredColumn(let name):
-                return "必須列が欠落: \(name)"
-            case .malformedRow(let line):
-                return "\(line) 行目のパース失敗"
-            case .timestampNotMonotonic(let line):
-                return "\(line) 行目: timestamp が前行より小さい"
-            case .emptyData:
-                return "imu.csv にデータ行がありません"
-            }
-        }
-        if let e = error as? AttitudeReconstructorError {
-            switch e {
-            case .insufficientSamples:
-                return "サンプル不足"
-            }
-        }
-        return "読み込みエラー: \(error.localizedDescription)"
-    }
+    // 純粋ロジックは `MotionReplayErrorPresenter` に分離（macOS テストランナーから検証可能にするため）。
 }
 #endif
