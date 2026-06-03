@@ -13,7 +13,7 @@ description: |
   - リファクタリング候補を SOLID 観点で特定して提案したい
 
   使用しないケース：レイヤー間の構造設計（クリーンアーキテクチャ領域）／単純な文法修正・スタイル修正のみが目的の場合／設計判断を伴わない情報整理のみの場合。
-model: sonnet[1m]
+model: opus
 color: green
 skills:
   - prompt-validation-workflow

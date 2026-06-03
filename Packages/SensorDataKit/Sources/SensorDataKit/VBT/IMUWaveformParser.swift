@@ -50,10 +50,21 @@ public enum IMUWaveformParser {
             guard cols.count > max(tsIndex, magIndex) else {
                 throw ParseError.malformedRow(line: offset + 2)
             }
-            guard
-                let ts = Double(cols[tsIndex].trimmingCharacters(in: .whitespaces)),
-                let mag = Double(cols[magIndex].trimmingCharacters(in: .whitespaces))
-            else {
+            let tsRaw = cols[tsIndex].trimmingCharacters(in: .whitespaces)
+            let magRaw = cols[magIndex].trimmingCharacters(in: .whitespaces)
+            // ISSUE-024: Watch 側 `CoreMotionIMURecorder` は `CSVTimestampFormatter.format`
+            // により timestamp を "yyyy-MM-dd HH:mm:ss.SSSSSS" の日時文字列で書き出すため、
+            // 数値直接パース（Double）のみだと現行 imu.csv が全行 malformed として
+            // 拒否される。日時形式 → UNIX 秒 → 生 Double の順でフォールバックする。
+            let ts: Double
+            if let parsed = CSVTimestampFormatter.parseTimeInterval(tsRaw) {
+                ts = parsed
+            } else if let parsedDouble = Double(tsRaw) {
+                ts = parsedDouble
+            } else {
+                throw ParseError.malformedRow(line: offset + 2)
+            }
+            guard let mag = Double(magRaw) else {
                 throw ParseError.malformedRow(line: offset + 2)
             }
             samples.append(IMUWaveformSample(timestamp: ts, accelMagnitude: mag))

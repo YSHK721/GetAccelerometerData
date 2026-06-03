@@ -30,6 +30,9 @@ struct VBTLabelingView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
+                // ISSUE-025: セッション識別ヘッダ（どのセッションを開いているか即確認）
+                sessionHeader
+
                 // 1) 動画プレイヤー
                 VideoPlayer(player: viewModel.player)
                     .frame(height: 240)
@@ -120,19 +123,36 @@ struct VBTLabelingView: View {
     @ViewBuilder
     private var imuWaveformView: some View {
         if viewModel.samples.isEmpty {
-            Text("IMU 波形なし")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(height: 120)
+            VStack(spacing: 4) {
+                Text("IMU 波形なし")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                // ISSUE-024: 失敗理由を表示（silent failure 防止）
+                if let reason = viewModel.imuLoadError {
+                    Text(reason)
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+            }
+            .frame(height: 120)
         } else {
+            // ISSUE-026: timestamp は UNIX 秒（≈1.78e9）で桁が大きすぎ Swift Charts が
+            // domain を 0..1.78e9 に自動拡張して波形が右端に潰れる。
+            // X 軸をプロット用に「録画開始からの相対秒」に変換して描画する。
+            // 内部保持（imuCursorTime / sync_markers 等）は仕様書 §8 の線形変換に
+            // 必要なため UNIX 秒のまま維持し、表示変換のみで対応する。
+            let base = viewModel.firstSampleTimestamp ?? viewModel.samples.first?.timestamp ?? 0
+            let cursorRel = viewModel.imuCursorTime - base
             Chart {
                 ForEach(Array(viewModel.samples.enumerated()), id: \.offset) { _, sample in
                     LineMark(
-                        x: .value("t", sample.timestamp),
+                        x: .value("t (s)", sample.timestamp - base),
                         y: .value("|a|", sample.accelMagnitude)
                     )
                 }
-                RuleMark(x: .value("cursor", viewModel.imuCursorTime))
+                RuleMark(x: .value("cursor", cursorRel))
                     .foregroundStyle(.red)
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
             }
@@ -158,12 +178,60 @@ struct VBTLabelingView: View {
         }
     }
 
+    // MARK: - セッション識別ヘッダ（ISSUE-025）
+    @ViewBuilder
+    private var sessionHeader: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(viewModel.folderName)
+                .font(.caption.monospaced())
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .truncationMode(.middle)
+            if let meta = viewModel.sessionMeta {
+                HStack(spacing: 8) {
+                    Text(meta.exercise)
+                        .font(.subheadline.weight(.semibold))
+                    Text("\(meta.weightKg, specifier: "%.1f") kg")
+                        .font(.caption)
+                    Text("set \(meta.setIndex)")
+                        .font(.caption)
+                    Text("rep目標 \(meta.repTarget)")
+                        .font(.caption)
+                    Spacer()
+                    Text(meta.sessionState.rawValue)
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(meta.sessionState == .valid ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                        .clipShape(Capsule())
+                }
+                if let iso = meta.videoStartIso8601 {
+                    Text("録画開始: \(iso)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Text("meta.json 未読込")
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal)
+        .padding(.top, 4)
+    }
+
     // MARK: - 時刻表示
     @ViewBuilder
     private var timeAxisDisplay: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(String(format: "動画ローカル: %.3f s", viewModel.currentVideoTime))
-            Text(String(format: "IMU 統一軸カーソル: %.3f s", viewModel.imuCursorTime))
+            // ISSUE-025: 統一時刻軸（UNIX 秒）+ 録画開始からの相対秒を併記
+            Text(String(
+                format: "IMU 統一軸: %.3f s（録画開始+%.3f s）",
+                viewModel.imuCursorTime,
+                viewModel.relativeCursorTime
+            ))
         }
         .font(.caption.monospaced())
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -295,6 +363,9 @@ struct VBTLabelingView: View {
         case .syncImuEnd:     return "SYNC END (IMU) 未記録"
         case .atLeastOneRep:  return "レップが 0 件（BOTTOM を最低1回）"
         case .bottomTimeMissing(let i): return "rep #\(i) の bottom_time 欠落"
+        // ISSUE-027: end <= start の場合に表示する順序エラー。
+        case .syncVideoOrderInvalid: return "SYNC (Video) 順序不正（END > START でない）"
+        case .syncImuOrderInvalid:   return "SYNC (IMU) 順序不正（END > START でない）"
         }
     }
 

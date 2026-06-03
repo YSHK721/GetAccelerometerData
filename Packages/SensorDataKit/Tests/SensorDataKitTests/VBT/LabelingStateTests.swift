@@ -151,4 +151,51 @@ final class LabelingStateTests: XCTestCase {
         let state = LabelingState(sessionId: "s1")
         XCTAssertThrowsError(try state.buildPayload())
     }
+
+    // MARK: ISSUE-027: SYNC (Video) end <= start → canSave=false + 順序不正を列挙
+    func test_canSave_videoSyncOrderInvalid_isBlocked() {
+        var state = LabelingState(sessionId: "s1")
+        state.recordSyncStartVideo(at: 50.0)
+        state.recordSyncEndVideo(at: 50.0) // 同値（degenerateVideoSpan）
+        state.recordSyncStartImu(at: 1000.0)
+        state.recordSyncEndImu(at: 1049.0)
+        state.recordBottom(atVideoTime: 10.0)
+
+        XCTAssertFalse(state.canSave)
+        XCTAssertTrue(state.missingRequirements.contains(.syncVideoOrderInvalid))
+    }
+
+    // MARK: ISSUE-027: SYNC (IMU) end < start → canSave=false + 順序不正を列挙
+    func test_canSave_imuSyncOrderInvalid_isBlocked() {
+        var state = LabelingState(sessionId: "s1")
+        state.recordSyncStartVideo(at: 1.0)
+        state.recordSyncEndVideo(at: 50.0)
+        state.recordSyncStartImu(at: 1050.0)
+        state.recordSyncEndImu(at: 1000.0) // 逆転
+        state.recordBottom(atVideoTime: 10.0)
+
+        XCTAssertFalse(state.canSave)
+        XCTAssertTrue(state.missingRequirements.contains(.syncImuOrderInvalid))
+    }
+
+    // MARK: ISSUE-027: SYNC 未記録時は順序不正を二重表示しない
+    func test_missingRequirements_doesNotEmitOrderInvalidWhenSyncMissing() {
+        let state = LabelingState(sessionId: "s1")
+        XCTAssertFalse(state.missingRequirements.contains(.syncVideoOrderInvalid))
+        XCTAssertFalse(state.missingRequirements.contains(.syncImuOrderInvalid))
+    }
+
+    // MARK: ISSUE-027: BuildError.requirementsNotMet が人間に読める localizedDescription を返す
+    func test_buildError_localizedDescription_isHumanReadable() {
+        let err = LabelingState.BuildError.requirementsNotMet([.syncVideoOrderInvalid])
+        let desc = err.errorDescription ?? ""
+        XCTAssertTrue(desc.contains("SYNC (Video) 順序不正"), "got: \(desc)")
+    }
+
+    // MARK: ISSUE-027: BuildError.converterFailed が人間に読める localizedDescription を返す
+    func test_buildError_converterFailed_localizedDescription() {
+        let err = LabelingState.BuildError.converterFailed
+        let desc = err.errorDescription ?? ""
+        XCTAssertTrue(desc.contains("SYNC マーカー"), "got: \(desc)")
+    }
 }

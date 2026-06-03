@@ -28,12 +28,43 @@ public struct LabelingState: Sendable, Equatable {
         case syncImuEnd
         case atLeastOneRep
         case bottomTimeMissing(repIndex: Int)
+        // ISSUE-027: SYNC START/END の順序逆転・同値（end <= start）を SAVE 前に検知し
+        // BuildError.converterFailed を未然に防ぐ。
+        case syncVideoOrderInvalid
+        case syncImuOrderInvalid
     }
 
-    public enum BuildError: Error, Equatable {
+    public enum BuildError: Error, Equatable, LocalizedError {
         case requirementsNotMet([MissingRequirement])
         case converterFailed
         case repLabelValidationFailed
+
+        // ISSUE-027: localizedDescription を人が読める形にする
+        // （既定の NSError 表現「SensorDataKit.LabelingState.BuildError error N」を回避）。
+        public var errorDescription: String? {
+            switch self {
+            case .requirementsNotMet(let missing):
+                let names = missing.map(Self.requirementName).joined(separator: ", ")
+                return "確定条件未充足: \(names)"
+            case .converterFailed:
+                return "SYNC マーカーの整合性エラー: 動画/IMU の START と END が逆転または同値のため線形補正できません"
+            case .repLabelValidationFailed:
+                return "rep ラベルの検証に失敗しました（rep_index または時刻値が不正）"
+            }
+        }
+
+        private static func requirementName(_ r: MissingRequirement) -> String {
+            switch r {
+            case .syncVideoStart:        return "SYNC START (Video) 未記録"
+            case .syncVideoEnd:          return "SYNC END (Video) 未記録"
+            case .syncImuStart:          return "SYNC START (IMU) 未記録"
+            case .syncImuEnd:            return "SYNC END (IMU) 未記録"
+            case .atLeastOneRep:         return "レップ 0 件"
+            case .bottomTimeMissing(let i): return "rep #\(i) bottom_time 欠落"
+            case .syncVideoOrderInvalid: return "SYNC (Video) 順序不正"
+            case .syncImuOrderInvalid:   return "SYNC (IMU) 順序不正"
+            }
+        }
     }
 
     public let sessionId: String
@@ -111,6 +142,14 @@ public struct LabelingState: Sendable, Equatable {
         // bottom_time は構造上必ず付与されるため通常欠落しないが、防御的に検証
         for rep in repsDraft where rep.bottomTimeVideo.isNaN {
             missing.append(.bottomTimeMissing(repIndex: rep.repIndex))
+        }
+        // ISSUE-027: 4点が揃っているときのみ順序検証（欠落 4 件と二重表示しない）。
+        // SyncMarker.init は endTime > startTime を要求するため、SAVE 前にここで検出する。
+        if let vs = syncMarkerVideoStart, let ve = syncMarkerVideoEnd, ve <= vs {
+            missing.append(.syncVideoOrderInvalid)
+        }
+        if let `is` = syncMarkerImuStart, let ie = syncMarkerImuEnd, ie <= `is` {
+            missing.append(.syncImuOrderInvalid)
         }
         return missing
     }

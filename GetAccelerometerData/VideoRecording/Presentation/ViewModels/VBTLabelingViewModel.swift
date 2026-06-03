@@ -28,6 +28,24 @@ final class VBTLabelingViewModel: ObservableObject {
     @Published private(set) var saveError: String?
     @Published private(set) var didSave: Bool = false
     @Published var isScrubbing: Bool = false
+    /// ISSUE-024: IMU 波形ロード失敗の理由（ファイル不存在 / パースエラー 等）。
+    /// 旧実装は `catch { samples = [] }` で握り潰しており、UI 上は「IMU 波形なし」のみ表示で
+    /// 原因不明だった。本プロパティを View で表示することで原因特定可能にする。
+    @Published private(set) var imuLoadError: String?
+
+    /// ISSUE-025: セッション識別情報。フォルダ名 + meta.json の内容を UI ヘッダに表示し、
+    /// 「どのセッションを開いているか」をユーザーが確実に確認できるようにする。
+    @Published private(set) var sessionMeta: MetaJSONPayload?
+    var folderName: String { folderURL.lastPathComponent }
+
+    /// ISSUE-025: 録画開始からの相対時刻換算用。`samples.first?.timestamp` を基準にする。
+    /// 統一時刻軸は UNIX 秒（1.78e9 オーダー）で人間には読めないため、UI 表示時に
+    /// この値を引いた相対秒（0.000s〜）を併記する。
+    @Published private(set) var firstSampleTimestamp: TimeInterval?
+    var relativeCursorTime: TimeInterval {
+        guard let base = firstSampleTimestamp else { return 0 }
+        return imuCursorTime - base
+    }
 
     let player: AVPlayer
     let folderURL: URL
@@ -67,16 +85,24 @@ final class VBTLabelingViewModel: ObservableObject {
     // MARK: - Load
 
     func load() {
+        // ISSUE-025: meta.json をロードしてセッション識別ヘッダに利用
+        loadMetaJSON()
+
         // IMU 波形ロード
         do {
             let s = try loadIMU.execute(folderURL: folderURL)
             self.samples = s
+            self.imuLoadError = nil
             // 初期カーソルは最初のサンプルに合わせる
             if let first = s.first {
                 self.imuCursorTime = first.timestamp
+                self.firstSampleTimestamp = first.timestamp
             }
         } catch {
+            // ISSUE-024: silent failure を防ぐため理由を UI / コンソールに露出する。
+            print("[VBTLabelingViewModel] IMU load failed: \(error)")
             self.samples = []
+            self.imuLoadError = String(describing: error)
         }
         // 動画 duration
         Task { [weak self] in
@@ -169,6 +195,20 @@ final class VBTLabelingViewModel: ObservableObject {
 
     func deleteRep(at index: Int) {
         state.deleteRep(at: index)
+    }
+
+    // MARK: - Meta load (ISSUE-025)
+
+    private func loadMetaJSON() {
+        let metaURL = folderURL.appendingPathComponent("meta.json")
+        do {
+            let data = try Data(contentsOf: metaURL)
+            let payload = try JSONDecoder().decode(MetaJSONPayload.self, from: data)
+            self.sessionMeta = payload
+        } catch {
+            print("[VBTLabelingViewModel] meta.json load failed: \(error.localizedDescription)")
+            self.sessionMeta = nil
+        }
     }
 
     // MARK: - Save

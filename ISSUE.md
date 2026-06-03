@@ -354,3 +354,134 @@
 - **影響範囲**: iOS Simulator 環境での VBT 動画録画機能のみ。実機（iPhone）影響なし。
 - **解決方針**: 実機（iPhone）でテストする。Simulator では VBT 動画録画機能は動作しないことを開発者向けドキュメントに明記済み（本 Issue が記録）。修正実装は不要。
 - **残課題**: なし（Simulator 限定の既知制約として確定）。
+
+---
+
+## ISSUE-021
+
+- **発生日**: 2026-06-02
+- **解決日**: 2026-06-02
+- **タイトル**: iPhone 側 VBT メタ入力画面が Watch 記録開始後も「Watch 記録開始待機中」のまま固まる
+- **重大度**: High
+- **ステータス**: RESOLVED
+- **発生工程**: VBT Ground Truth Tool Phase B 受信フロー実行時
+- **該当ファイル**:
+  - `GetAccelerometerData/VideoRecording/Presentation/ViewModels/VBTGroundTruthMetaInputViewModel.swift`
+  - `GetAccelerometerData/VideoRecording/Data/Inbound/VBTWatchMessageRouter.swift`
+- **概要**: Watch が「● 記録中」表示で正常稼働している（= iPhone が `vbt.startRecording` の ACK を返した = `VBTReceptionUseCase.state` は `.waitingForStart → .recording` に遷移済み）にもかかわらず、iPhone 画面の「セッション状態」は `Watch 記録開始待機中` のままで `isWaitingForWatch` が真のままになる。
+- **根本原因**: `VBTGroundTruthMetaInputViewModel.refreshStatus()` は `init()` と `submitPendingMetadata()` でしか呼ばれない。`VBTReceptionUseCase` は `NSLock` 保護の plain getter（`@Published` でも `ObservableObject` でもない）であり、`VBTWatchMessageRouter.handleStartRecording` 完了時に View Model へ状態変更を通知する経路が存在しない。結果として use case の状態遷移が UI へ反映されない。
+- **対策方針**: `VBTWatchMessageRouter` の各ハンドラ（`handleStartRecording` / `handleStopRecording` / `handleIMUFileReceived`）が use case の await 完了時に `NotificationCenter` で状態変更を広報し、`VBTGroundTruthMetaInputViewModel` が購読して `refreshStatus()` を呼ぶ（既存の `attachRouterRequestNotification` と同パターン）。
+- **実施内容**: (1) `VBTWatchMessageRouter` に `stateDidChangeNotification` を追加し、3 つのハンドラ（start / stop / IMU 受信）が `useCase.handle*` を await 直後に `notifyStateDidChange()` を呼ぶよう修正、(2) `VBTGroundTruthMetaInputViewModel.init()` に `NotificationCenter.default.publisher(for:).receive(on: .main).sink` 購読を追加し、通知到達時に `refreshStatus()` を呼ぶ（`AnyCancellable` を `stateChangeCancellable` で保持）。
+- **検証結果**: iOS ターゲット `xcodebuild ... -destination 'generic/platform=iOS'` で BUILD SUCCEEDED。実機での Watch 連携動作確認は未実施（ユーザー検証待ち）。
+
+---
+
+## ISSUE-022
+
+- **発生日**: 2026-06-02
+- **タイトル**: iPhone 側 VBT 失敗時に原因（reason）が UI / Watch / ログのいずれにも表示されず診断不能
+- **重大度**: High
+- **ステータス**: OPEN（診断強化済み、根本原因は次回再現待ち）
+- **発生工程**: VBT Ground Truth Tool Phase B 受信フロー（Watch 「IMU 転送タイムアウト」失敗 + iPhone `.failed` 遷移）
+- **該当ファイル**:
+  - `GetAccelerometerData/VideoRecording/Data/Inbound/VBTWatchMessageRouter.swift`
+  - `GetAccelerometerData/Data/Gateways/WatchSessionGateway.swift`
+  - `GetAccelerometerData/VideoRecording/Presentation/ViewModels/VBTGroundTruthMetaInputViewModel.swift`
+- **概要**: `VBTReceptionUseCase.HandleResult.error(reason:)` の `reason` 文字列が、Router `handleIMUFileReceived` の `completion: (Bool) -> Void` で破棄されており、`WatchSessionGateway` も Watch 側に固定の `["status":"error"]` のみ返していた。`VBTGroundTruthMetaInputViewModel.refreshStatus()` も `.failed` 時に固定文字列「失敗：再試行してください」を表示するのみで、ユーザーは原因不明のまま再試行を強いられていた。実際の reason 候補は `"video stop failed: recorder not running"` / `"video stop failed: <err>"` / `"import failed: <err>"` / `"no active recording session"` の 4 系統（`VBTReceptionUseCase.swift` 各エラーパス）。
+- **実施内容**: (1) Router の `handleIMUFileReceived` completion を `(Bool, String?) -> Void` に拡張し、`.error(reason)` の reason を Watch / UI 両方に伝搬、(2) Router の各失敗パスで `print("[VBTWatchMessageRouter] ...")` をログ出力（Xcode コンソール / Console.app で確認可能）、(3) `notifyStateDidChange(reason:)` に reason 引数を追加し `userInfo["reason"]` に載せて Notification 配送、(4) `VBTGroundTruthMetaInputViewModel` に `@Published lastFailureReason: String?` を追加、Notification 受信時に取り込み `refreshStatus()` で `statusText = "失敗：\(reason)"` として表示、(5) `WatchSessionGateway` の ACK sendMessage を errorHandler 付きで `print` するよう変更し、reachability 喪失検出を可能化、(6) `lastMessage` に reason を含めて UI 上にも露出。
+- **副次的観測**: iPhone 側で `sendMessage(reply, replyHandler: nil, errorHandler: { _ in })` の errorHandler が空のため、Watch reachability 喪失時に ACK が無音で失われ Watch 側「IMU 転送タイムアウト」を引き起こす経路が存在。本 Issue では診断ログを追加したのみで根本対策（`transferUserInfo` フォールバック）は別 Issue で扱う。
+- **検証結果**: iOS ターゲット BUILD SUCCEEDED。reason が UI / コンソール両方で確認できることをユーザー実機検証で確認済（取得 reason: `"import failed: The file ... couldn't be opened because there is no such file."` → 根本原因 ISSUE-023 として分離）。
+- **残課題**: なし（診断強化の目的は達成。根本原因は ISSUE-023 で別途対処）。
+- **ステータス変更**: OPEN → RESOLVED（2026-06-02）
+
+---
+
+## ISSUE-023
+
+- **発生日**: 2026-06-02
+- **解決日**: 2026-06-02
+- **タイトル**: WCSession `didReceive file:` の一時ファイルライフサイクル違反により VBT IMU CSV 取込が "no such file" で失敗
+- **重大度**: Critical
+- **ステータス**: RESOLVED（実機検証待ち）
+- **発生工程**: VBT Ground Truth Tool Phase B IMU 受信フロー（仕様書 §6 step 12）
+- **該当ファイル**: `GetAccelerometerData/Data/Gateways/WatchSessionGateway.swift`
+- **概要**: Apple `WCSession` の `session(_:didReceive file:)` delegate メソッドは return した瞬間に `file.fileURL` の一時ファイルが iOS によって削除される仕様だが、本実装は `VBTWatchMessageRouter.handleIMUFileReceived` を async `Task` で起動して即座に return しており、Use Case 側で `await video.stopRecording()` を待つ間（数秒）に元ファイルが消失し、後続の `FileSystemSessionStore.importIMUFile(from:to:)` の `copyItem` が `NSFileNoSuchFileError`（Code=260）で失敗していた。
+- **根本原因**: WCSession のファイルライフサイクル契約違反。delegate スコープ外（async Task）に `file.fileURL` を持ち越す設計が誤り。Simulator では `stopRecording` が長時間ブロック（カメラ err=-17281）するため必発、実機でも `stopRecording` が数秒以上かかれば再現しうる潜在バグ。
+- **取得 reason**: `import failed: The file "vbt_imu_20260602_205217.csv" couldn't be opened because there is no such file.`（ISSUE-022 で診断強化済みの経路で取得）
+- **実施内容**: `WatchSessionGateway.session(_:didReceive file:)` の VBT 経路で、delegate スコープ内（同期）に `FileManager.copyItem(at: originURL, to: stableURL)` で `FileManager.temporaryDirectory/vbt_imu_inbox_<UUID>_<filename>` へ複製し、その安定 URL を `router.handleIMUFileReceived(sourceURL: stableURL, ...)` に渡すよう変更。コピー失敗時は即座に Watch へ error reply + UI 表示を実施。完了コールバックで stableURL を `try? FileManager.default.removeItem(at:)` でクリーンアップ（成功/失敗いずれも）。
+- **検証結果**: iOS ターゲット BUILD SUCCEEDED。実機/実機ペアでの再現検証はユーザー側で実施予定。
+- **副次効果**: Simulator 制約（ISSUE-020）の AVCapture err=-17281 は別問題として残置（実機では発生しないため）。
+
+---
+
+## ISSUE-024
+
+- **発生日**: 2026-06-02
+- **解決日**: 2026-06-02
+- **タイトル**: VBT ラベリング画面で IMU 波形が「IMU 波形なし」表示のまま出ない（書き出し側 / パース側の timestamp 形式不一致）
+- **重大度**: High
+- **ステータス**: RESOLVED（実機検証待ち）
+- **発生工程**: VBT Ground Truth Tool Phase C ラベリング画面（仕様書 §10）
+- **該当ファイル**:
+  - `Packages/SensorDataKit/Sources/SensorDataKit/VBT/IMUWaveformParser.swift`
+  - `GetAccelerometerData/VideoRecording/Presentation/ViewModels/VBTLabelingViewModel.swift`
+  - `GetAccelerometerData/VideoRecording/Presentation/Views/VBTLabelingView.swift`
+- **概要**: Watch 側 `CoreMotionIMURecorder.exportCSV()` は `CSVTimestampFormatter.format` により timestamp 列を `yyyy-MM-dd HH:mm:ss.SSSSSS`（日時文字列）で書き出すが、ラベリング側パーサ `IMUWaveformParser.parse` は `Double(...)` で数値直接パースを試みていたため、Watch から到達した imu.csv は全行 `ParseError.malformedRow` として拒否され、`VBTLabelingViewModel.load()` の `catch { samples = [] }` で握り潰され、UI は「IMU 波形なし」表示のみ。
+- **根本原因**: 書き出し側（Watch）とパース側（iPhone Phase C）のタイムスタンプ形式契約が不一致。仕様書 §7 注（`CoreMotionIMURecorder.swift:110`）は「既存パイプライン互換のため UNIX 時刻でも書ける CSV を維持する」と明記しており書き出し側は意図通り、パーサ側が両形式を許容していなかった。加えて ViewModel が `catch` でエラーを握り潰す silent failure パターンが診断を困難にしていた。
+- **実施内容**: (1) `IMUWaveformParser.parse` で「`CSVTimestampFormatter.parseTimeInterval` → `Double` フォールバック」の順に試行する両形式許容ロジックに変更（既存数値テストは Double フォールバックで通過、Watch 由来の日時文字列は parseTimeInterval で UNIX 秒へ変換）、(2) 回帰テスト `test_parse_acceptsDateStringTimestamp` を追加し `2026-06-02 20:52:17.xxxxxx` 形式の正規化を検証、(3) `VBTLabelingViewModel` に `@Published imuLoadError: String?` を追加し `catch` で error を文字列化して保持・`print` 出力、(4) `VBTLabelingView` の「IMU 波形なし」セクションに失敗理由を赤字で表示する分岐を追加（ISSUE-022 と同じ silent failure 防止パターン）。
+- **検証結果**: SensorDataKit `swift test` で `IMUWaveformLoaderTests` 5/5 PASSED（新規 1 件 + 既存 4 件）。iOS ターゲット BUILD SUCCEEDED。
+- **残課題**: 実機 / Simulator 連携で実際の imu.csv → ラベリング波形描画までを end-to-end 検証する。
+
+---
+
+## ISSUE-025
+
+- **発生日**: 2026-06-02
+- **解決日**: 2026-06-02
+- **タイトル**: VBT ラベリング画面でカーソル値が UNIX 秒生表示（`1780402247.066s`）かつセッション識別情報が UI に無く「全て同じデータに見える」UX 問題
+- **重大度**: Medium
+- **ステータス**: RESOLVED（実機検証待ち）
+- **発生工程**: VBT Ground Truth Tool Phase C ラベリング画面（仕様書 §10）
+- **該当ファイル**:
+  - `GetAccelerometerData/VideoRecording/Presentation/ViewModels/VBTLabelingViewModel.swift`
+  - `GetAccelerometerData/VideoRecording/Presentation/Views/VBTLabelingView.swift`
+- **概要**: IMU 統一時刻軸カーソル表示が `1780402247.066s`（UNIX 秒の生値）で人間に読めず、加えて画面にセッション識別情報（フォルダ名 / 種目 / 重量 / set 番号 / 録画開始時刻 / VALID 状態）が一切表示されないため、複数セッションを切り替えて閲覧する際「どのセッションを見ているか」確認できず、似た振幅の波形が「全て同じデータ」に見えてしまっていた。
+- **根本原因**: (1) ISSUE-024 修正で日時文字列を `parseTimeInterval` 経由で UNIX 秒へ変換するようにしたが、表示側を「生 UNIX 秒のまま」描画していた、(2) ラベリング画面が `folderURL` を受け取って即 `imuWaveformView` を描画する設計で、meta.json / フォルダ名を UI へ反映する経路が無かった。
+- **実施内容**: (1) `VBTLabelingViewModel` に `sessionMeta: MetaJSONPayload?` / `folderName: String` / `firstSampleTimestamp: TimeInterval?` / `relativeCursorTime: TimeInterval` を追加し、`load()` で `meta.json` を `JSONDecoder` で読み込んで保持、最初のサンプル timestamp を相対秒基準として保存、(2) `VBTLabelingView` に `sessionHeader` ビューを新設し、フォルダ名 / 種目 / 重量 / set 番号 / rep 目標 / VALID-PENDING バッジ / 録画開始 ISO8601 を画面最上部に表示、(3) `timeAxisDisplay` の IMU カーソル表示を「`IMU 統一軸: 1780402247.066 s（録画開始+1.234 s）`」のように UNIX 秒 + 相対秒の併記に変更。
+- **検証結果**: iOS ターゲット BUILD SUCCEEDED。実機での複数セッション切替時に「どのセッションを開いているか」確認可能か / 相対秒表示が直感的かをユーザー検証予定。
+
+---
+
+## ISSUE-026
+
+- **発生日**: 2026-06-02
+- **解決日**: 2026-06-02
+- **タイトル**: VBT ラベリング画面の Swift Charts X 軸が UNIX 秒の桁で `0..1.78E9` まで拡大され波形が右端に潰れて見えない
+- **重大度**: High
+- **ステータス**: RESOLVED（実機検証待ち）
+- **発生工程**: VBT Ground Truth Tool Phase C ラベリング画面（仕様書 §10）
+- **該当ファイル**: `GetAccelerometerData/VideoRecording/Presentation/Views/VBTLabelingView.swift`
+- **概要**: ユーザー提供のスクリーンショット（2026-06-02 21:27）で、IMU 波形チャートの X 軸ラベルが `0 / 5.0E8 / 1.0E9 / 1.5E9` と表示され、実際の波形（LineMark）が右端の数ピクセルに圧縮されて視認できない状態を確認。RuleMark（赤点線カーソル）のみがチャート右端に視認可能。
+- **根本原因**: ISSUE-024 で `IMUWaveformParser` が `CSVTimestampFormatter.parseTimeInterval` 経由で UNIX 秒（≈1.78×10⁹）を返すようになったが、それを `LineMark(x: .value("t", sample.timestamp))` でそのまま X 軸に流し込んでいた。Swift Charts のデフォルト軸スケーリングアルゴリズムは値の絶対桁が大きい場合（|domain| ≪ 値）、`[0, max]` を自動採用する傾向があり、データ範囲（数十秒）が `0..1.78e9` の中に飲み込まれて 1px 未満に圧縮された。
+- **実施内容**: `VBTLabelingView` の Chart 内部で「録画開始（`viewModel.firstSampleTimestamp`）からの相対秒」を LineMark / RuleMark の X 値として採用するよう変換。内部状態（`imuCursorTime` / sync_markers ベース変換）は仕様書 §8 の線形補正のため UNIX 秒のまま維持し、**表示層でのみ相対秒換算** することで保存形式 / DTO / API 契約はすべて無修正。drag gesture（カーソル長押し移動）も UNIX 秒のまま処理しているため整合性は維持。
+- **検証結果**: iOS ターゲット BUILD SUCCEEDED。実機で X 軸が `0..(録画秒数)` の範囲に正しくスケールされ、波形ピーク・ボトムが視認可能となり、長押しドラッグでカーソルが目視可能な位置に動くことをユーザー検証予定。
+- **副次効果**: 同じ UNIX 秒 → 相対秒変換ロジックは ISSUE-025 で View Model の `relativeCursorTime` として既に提供済みのため、表示層のロジックは局所化されている。
+
+---
+
+## ISSUE-027
+
+- **発生日**: 2026-06-03
+- **解決日**: 2026-06-03
+- **タイトル**: VBT ラベリング SAVE 時に「保存失敗: SensorDataKit.LabelingState.BuildError error 1」と表示され原因が判らない
+- **重大度**: High
+- **ステータス**: RESOLVED（実機検証完了 2026-06-03）
+- **発生工程**: VBT Ground Truth Tool Phase C ラベリング画面（仕様書 §10）
+- **該当ファイル**:
+  - `Packages/SensorDataKit/Sources/SensorDataKit/VBT/LabelingState.swift`
+  - `Packages/SensorDataKit/Tests/SensorDataKitTests/VBT/LabelingStateTests.swift`
+  - `GetAccelerometerData/VideoRecording/Presentation/Views/VBTLabelingView.swift`
+- **概要**: SAVE ボタン押下時にアラート「保存失敗: The operation couldn't be completed. SensorDataKit.LabelingState.BuildError error 1.」が表示され、ユーザーはどのマーカーをどう直せばよいか判断できない。
+- **根本原因**: (1) `BuildError` が `LocalizedError` 未準拠で、`error.localizedDescription` が既定の NSError 表現（`<module>.<type> error <case-index>`）を返していた。`error 1` は宣言順 2 番目の `converterFailed`。(2) `LabelingState.missingRequirements` が「マーカー 4 点と rep ≥ 1」のみを判定し、SyncMarker 不変条件（`endTime > startTime`）および VideoToUnifiedConverter の `videoSpan != 0` を SAVE 前に検証していなかった。結果として UI 上 `canSave=true` のまま `buildPayload()` 内で `SyncMarker.init` → `ValidationError.endNotAfterStart` が発生し `BuildError.converterFailed` にラップされていた。
+- **実施内容**: (1) `MissingRequirement` に `.syncVideoOrderInvalid` / `.syncImuOrderInvalid` を追加し、4 点が揃っている時のみ `end <= start` を判定（欠落エラーとの二重表示を防止）。(2) `BuildError` を `LocalizedError` 準拠とし、`errorDescription` で「確定条件未充足: <要素名>」「SYNC マーカーの整合性エラー: 動画/IMU の START と END が逆転または同値のため線形補正できません」「rep ラベルの検証に失敗しました」を返却。(3) `VBTLabelingView.missingLabel` に新ケース 2 件を追加。(4) `LabelingStateTests` に順序逆転/同値/SYNC 未記録時の二重表示防止/localizedDescription の 5 テストを追加（合計 15 件全件パス）。
+- **検証結果**: `swift test --filter LabelingStateTests` 15/15 パス、`xcodebuild -scheme GetAccelerometerData -destination 'generic/platform=iOS' build` BUILD SUCCEEDED。実機検証（2026-06-03 提供スクリーンショット「エラー確認:欠落要素_SYNC （IMU）順序不正（END > START でない）.PNG」）にて、SYNC IMU START/END を逆転させた状態で SAVE ボタンが灰色化（disabled）し、欠落要素欄に「SYNC (IMU) 順序不正（END > START でない）」が表示されることを確認。
