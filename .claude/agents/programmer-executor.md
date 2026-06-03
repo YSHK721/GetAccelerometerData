@@ -13,7 +13,7 @@ description: |
 
   使用しないケース：要件抽出・基本設計・内部設計が未確定の場合（→ spec-driven-developer）／単発のクラス・インターフェース粒度設計のみが目的の場合（→ coding-executor）／単発のレイヤー間構造評価のみが目的の場合（→ architecture-executor）／単発の TDD サイクル管理のみが目的の場合（→ tdd-executor）／単発のコードレビューのみが目的の場合（→ code-review-executor）／単発の Git 操作のみが目的の場合（→ git-executor）。
 tools: [Read, Write, Edit, Glob, Grep, Bash]
-model: sonnet[1m]
+model: opus
 color: blue
 skills:
   - prompt-validation-workflow

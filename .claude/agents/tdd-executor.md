@@ -11,7 +11,7 @@ description: |
   - 失敗テスト → 最小実装 → リファクタリングのサイクルでコードを実装したい
 
   使用しないケース：探索的調査・ログ確認・設定変更などテスト不要の作業の場合／既存テストの単純な修正のみで完結する場合／プロトタイプ・スパイク調査用の使い捨てコード。
-model: sonnet[1m]
+model: opus
 color: green
 skills:
   - prompt-validation-workflow
