@@ -118,42 +118,17 @@ struct DarkProLabelingSkin: View {
 
     @ViewBuilder
     private var videoScrubBar: some View {
-        GeometryReader { geo in
-            let progress = VBTLabelingSkinShared.videoProgress(
-                currentTime: viewModel.currentVideoTime,
-                duration: viewModel.videoDuration
-            )
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.12)).frame(height: 8)
-                Capsule().fill(Color.cyan).frame(width: geo.size.width * progress, height: 8)
-                if viewModel.videoDuration > 0 {
-                    if let s = viewModel.state.syncMarkerVideoStart {
-                        let x = geo.size.width * min(1.0, max(0.0, s / viewModel.videoDuration))
-                        Rectangle().fill(Color.green).frame(width: 3, height: 22).offset(x: x - 1)
-                    }
-                    if let e = viewModel.state.syncMarkerVideoEnd {
-                        let x = geo.size.width * min(1.0, max(0.0, e / viewModel.videoDuration))
-                        Rectangle().fill(Color.orange).frame(width: 3, height: 22).offset(x: x - 1)
-                    }
-                }
-                Circle().fill(Color.cyan).frame(width: 16, height: 16)
-                    .shadow(color: Color.cyan.opacity(0.6), radius: 6)
-                    .offset(x: geo.size.width * progress - 8)
-            }
-            .contentShape(Rectangle())
-            .gesture(
-                LongPressGesture(minimumDuration: 0.5)
-                    .sequenced(before: DragGesture(minimumDistance: 0))
-                    .onChanged { value in
-                        if case .second(true, let drag?) = value {
-                            viewModel.isScrubbing = true
-                            let ratio = min(1.0, max(0.0, drag.location.x / geo.size.width))
-                            viewModel.seek(to: ratio * viewModel.videoDuration)
-                        }
-                    }
-                    .onEnded { _ in viewModel.isScrubbing = false }
-            )
-        }
+        SharedVideoScrubBar(
+            viewModel: viewModel,
+            trackHeight: 8,
+            trackInactiveColor: Color.white.opacity(0.12),
+            trackActiveColor: .cyan,
+            knobSize: 16,
+            knobColor: .cyan,
+            knobShadow: true,
+            syncLineHeight: 22,
+            syncLineWidth: 3
+        )
         .frame(height: 26)
         .padding(.horizontal)
     }
