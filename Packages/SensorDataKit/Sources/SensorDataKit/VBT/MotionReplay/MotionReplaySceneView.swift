@@ -116,9 +116,13 @@ public struct MotionReplaySceneView: UIViewRepresentable {
         let node = SCNNode()
         node.name = "camera"
         node.camera = camera
-        // バンド込み全高 0.155m を視野内に余裕を持って収めるため、縦長端末でも切れない位置まで後退。
-        // FOV 60° at z=0.4 で可視高さ = 2 * 0.4 * tan(30°) ≈ 0.462m → Watch 0.155m は約 33% で余裕。
-        node.position = SCNVector3(0, 0, 0.4)
+        // カメラ距離はモデル最大辺長に比例（係数 2.6）で算出。
+        // 旧仕様の固定 z=0.4 / モデル 0.155m の比 (≒2.58) を踏襲。
+        // FOV 60° では可視高さ = 2 * z * tan(30°) ≈ 1.155 * z となり、
+        // 比率 2.6 で可視高さ = モデル ×3.0 となるため左右上下に十分な余白を確保しつつ
+        // モデルがカメラ内側に踏み込まないため魚眼ライクな湾曲が発生しない。
+        let cameraDistance = WatchSceneNodeBuilder.targetMaxExtentMeters * 2.6
+        node.position = SCNVector3(0, 0, cameraDistance)
         node.look(at: SCNVector3(0, 0, 0))
         return node
     }

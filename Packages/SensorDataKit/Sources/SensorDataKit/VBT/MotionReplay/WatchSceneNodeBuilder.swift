@@ -258,7 +258,11 @@ public enum WatchSceneNodeBuilder {
 
     /// ロード後モデルの目標最大辺長（m）。procedural fallback の総 Y 寸法 (本体+バンド) と概ね同等。
     /// 動的スケール算出に失敗した場合のみ `loadedModelFallbackScale` が使われる。
-    private static let targetMaxExtentMeters: Float = 0.50
+    ///
+    /// 公開理由:
+    ///   `MotionReplaySceneView` がこの値を参照してカメラ距離を比例算出することで、
+    ///   サイズ変更時のパース歪み（カメラが相対的に近づきすぎることによる魚眼ライクな湾曲）を防ぐ。
+    public static let targetMaxExtentMeters: Float = 0.35
 
     /// bbox 計測失敗時のフォールバックスケール（1 OBJ unit = 1 mm 想定）
     private static let loadedModelFallbackScale: Float = 0.001
@@ -273,7 +277,7 @@ public enum WatchSceneNodeBuilder {
     /// - N = 1/N（線量約 100/N %）
     /// 値を大きくするほど画面がすっきりするが、シルエットの輪郭精度が落ちる。
     /// 線量を「増やす」には OBJ 自体のポリゴン分割が必要（本パラメータでは増やせない）。
-    private static let wireframeTriangleStride: Int = 4
+    private static let wireframeTriangleStride: Int = 1
 
     // MARK: - Dimensions (m)
 
