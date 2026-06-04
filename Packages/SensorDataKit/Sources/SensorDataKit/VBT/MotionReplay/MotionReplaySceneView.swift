@@ -26,8 +26,9 @@ public struct MotionReplaySceneView: UIViewRepresentable {
 
     public func makeUIView(context: Context) -> SCNView {
         let scnView = SCNView()
-        // 暗灰色の背景: Watch 本体（ダークグレー）と十分なコントラスト
-        scnView.backgroundColor = UIColor(white: 0.15, alpha: 1.0)
+        // 透明背景: 親 SwiftUI ビューと一体化させる（フレーム外し）
+        scnView.backgroundColor = UIColor.clear
+        scnView.isOpaque = false
         // 明示ライト構成で十分明るいため、デフォルトライトは無効化（重畳による washed out 回避）
         scnView.autoenablesDefaultLighting = false
         // PoC: カメラは固定（ユーザー操作不可）
@@ -112,7 +113,7 @@ public struct MotionReplaySceneView: UIViewRepresentable {
         // パース歪み（湾曲）を抑制したまま視覚的拡大を得る常套手段。
         // FOV 60° 時の可視高さ = 1.155 * z に対し、FOV 30° では 0.536 * z（約 46%）となり
         // 同じカメラ距離でもモデルが約 2 倍の画面占有率になる。
-        camera.fieldOfView = 30
+        camera.fieldOfView = 20
         // 近接面・遠面を明示的に設定（既定値で Watch サイズ 0.04m がクリップされる可能性を排除）
         camera.zNear = 0.001
         camera.zFar = 10

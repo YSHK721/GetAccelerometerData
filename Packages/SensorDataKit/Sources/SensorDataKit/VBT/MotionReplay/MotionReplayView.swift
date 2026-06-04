@@ -30,11 +30,9 @@ public struct MotionReplayView: View {
                 .foregroundStyle(.red)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            // 3D シーン
+            // 3D シーン（背景・角丸クリップは外し、周囲ビューと一体化させる）
             MotionReplaySceneView(orientation: viewModel.state.currentOrientation)
                 .frame(height: 320)
-                .background(Color.black)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
 
             // 再生コントロール行
             HStack(spacing: 12) {
