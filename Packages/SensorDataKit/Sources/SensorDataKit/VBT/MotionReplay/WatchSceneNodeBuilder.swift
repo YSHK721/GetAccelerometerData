@@ -77,13 +77,17 @@ public enum WatchSceneNodeBuilder {
     /// バンドル同梱の OBJ をロードし、`rootNodeName` のラッパーノードに包んで返す。
     /// アセット未配置・ロード失敗・ジオメトリ空のいずれかでも nil を返し、呼び出し側はフォールバックする。
     /// 各失敗分岐は DEBUG ビルドでログ出力し、フォールバック発動の観測性を確保する。
+    ///
+    /// 注意:
+    ///   SwiftPM の `.process("Resources")` はディレクトリ構造をフラット化してバンドル直下に配置する。
+    ///   ソース上は `Resources/MotionReplay/AppleWatch.obj` に置いてあっても、バンドル内のパスは
+    ///   ルート直下 `AppleWatch.obj` になるため、`subdirectory:` を指定すると nil が返る。
     private static func loadOBJModel() -> SCNNode? {
         guard let url = Bundle.module.url(
             forResource: "AppleWatch",
-            withExtension: "obj",
-            subdirectory: "MotionReplay"
+            withExtension: "obj"
         ) else {
-            debugLogFallback(reason: "OBJ resource not found in bundle (Resources/MotionReplay/AppleWatch.obj)")
+            debugLogFallback(reason: "OBJ resource not found in bundle (expected: AppleWatch.obj at bundle root)")
             return nil
         }
 

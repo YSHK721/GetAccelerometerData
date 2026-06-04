@@ -630,3 +630,4 @@
   - **(B) Watch バンドル隔離**: `resources` 宣言を iOS 限定化（`.copy("Resources/MotionReplay/AppleWatch.obj")` + iOS-only sub-target 等）で watchOS バイナリへの不要同梱を解消
   - **(C) マテリアル整備**: `.mtl` または SCNMaterial を明示付与し、視覚品質を本番水準に
   - **(D) 軸正規化恒常化**: アセット固有の軸ズレをハードコードせず `MotionReplaySceneView` 側で吸収できる構造に維持
+- **追加修正 1（2026-06-04）**: 初回コミット `0cda13f` で `Bundle.module.url(forResource:withExtension:subdirectory:)` の `subdirectory: "MotionReplay"` 指定により実行時にリソースが見つからず常にフォールバック（procedural）にフォールバックしていた。原因は SwiftPM の `.process("Resources")` がディレクトリ構造をフラット化しバンドル直下に配置する仕様。`subdirectory:` 指定を削除して修正。iOS BUILD SUCCEEDED で再ビルド確認。
