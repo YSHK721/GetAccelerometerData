@@ -51,3 +51,9 @@ buildServer.json
 .claude/**/.DS_Store
 .claude/.DS_Store
 .claude/settings.local.json
+
+# ---- VBT Motion Replay 3D アセット（ライセンス未確定のためローカル only） ----
+# 配布権が確定するまで個別ファイル単位で除外（誤コミット防止）
+Packages/SensorDataKit/Sources/SensorDataKit/Resources/MotionReplay/*.obj
+Packages/SensorDataKit/Sources/SensorDataKit/Resources/MotionReplay/*.mtl
+Packages/SensorDataKit/Sources/SensorDataKit/Resources/MotionReplay/textures/

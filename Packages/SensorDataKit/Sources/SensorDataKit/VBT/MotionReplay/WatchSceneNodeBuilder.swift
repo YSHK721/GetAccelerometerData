@@ -1,22 +1,27 @@
-// VBT Motion Replay PoC Phase 4: Apple Watch Series 9 41mm 形状を模した SceneKit ノード階層構築。
+// VBT Motion Replay PoC Phase 4: Apple Watch 形状を SceneKit ノード階層として供給する。
 // 内部設計書: .docs/07_vbt_motion_replay_internal_design.md §8.3
 //
 // 責務:
-//   SCNNode 階層（本体・画面・Crown・上下バンド）を組み立てる純粋関数のみを提供。
-//   親ノード "watch" 1 つを返す。子に本体・画面・Crown・上下バンドを保持し、
+//   親ノード "watch" 1 つを返す。`build()` は以下の優先順で構築する。
+//     1. バンドル同梱の OBJ アセット（Resources/MotionReplay/AppleWatch.obj）をロード
+//     2. ロード失敗時は従来の手続き構築（SCNBox / SCNPlane / SCNCylinder 組合せ）にフォールバック
 //   親ノードに `simdOrientation` を適用すれば全体姿勢が回転する。
 //
 // 座標系:
 //   SceneKit 既定の右手系（X=右, Y=上, Z=前面方向）。単位は m（メートル）。
-//   Watch の画面法線は +Z 方向、上端は +Y 方向に配置する。
+//   手続き構築では画面法線=+Z、上端=+Y で配置する。OBJ モデルの自然向きはアセットに依存し、
+//   `normalizeLoadedModel()` で原点を bbox 中心に揃え、1 unit = 1mm 想定で 0.001 倍にスケールする。
+//   方向回転は親側（MotionReplaySceneView の `simdOrientation`）で吸収する設計とする。
 //
 // ガード方針:
 //   ファイル全体を `#if canImport(UIKit) && os(iOS)` でガードし、
-//   macOS テストランナーから不可視にする（SceneKit/UIKit 依存のため）。
+//   macOS テストランナーから不可視にする（SceneKit/UIKit/ModelIO 依存のため）。
 
 #if canImport(UIKit) && os(iOS)
 import UIKit
 import SceneKit
+import ModelIO
+import SceneKit.ModelIO
 
 public enum WatchSceneNodeBuilder {
 
@@ -26,9 +31,35 @@ public enum WatchSceneNodeBuilder {
     /// 文字列リテラル散在による typo silent no-op を防ぐ目的。
     public static let rootNodeName = "watch"
 
-    /// Apple Watch Series 9 41mm を模した SCNNode 階層を組み立てて返す。
-    /// 返値ノードの `.name` は `rootNodeName`。子ノードは `watchBody / watchScreen / crown / bandUpper / bandLower`。
+    /// Apple Watch を模した SCNNode 階層を組み立てて返す。
+    /// OBJ アセット（`Resources/MotionReplay/AppleWatch.obj`）が利用可能ならそれをロードし、
+    /// 失敗時は従来の手続き構築（`buildProcedural()`）にフォールバックする。
+    /// 返値ノードの `.name` は `rootNodeName`。
+    ///
+    /// パフォーマンス:
+    ///   OBJ パース（5.2MB / 39549 頂点）は初回のみ実行し、テンプレートノードを `cachedOBJTemplate`
+    ///   に保持する。以降は `clone()` で複製を返すため `makeUIView` 再呼出（SwiftUI 再構築）時の
+    ///   メイン同期ヒッチを回避する。
     public static func build() -> SCNNode {
+        if let template = cachedOBJTemplate {
+            return template.clone()
+        }
+        return buildProcedural()
+    }
+
+    /// OBJ ロード結果のキャッシュ。初回参照時に `loadOBJModel()` を 1 度だけ実行する。
+    /// nil の場合は OBJ ロード不能（未配置 / 破損 / ジオメトリ空）。
+    ///
+    /// Swift 6 concurrency:
+    ///   `SCNNode` は非 Sendable のため `nonisolated(unsafe)` で明示オプトアウト。
+    ///   テンプレートは read-only として扱い、利用側は必ず `clone()` で複製するため
+    ///   共有可変状態は発生しない。SceneKit API はメインスレッドで使う前提（呼び出し側
+    ///   `MotionReplaySceneView.makeUIView(_:)` は MainActor 上で実行される）。
+    nonisolated(unsafe) private static let cachedOBJTemplate: SCNNode? = loadOBJModel()
+
+    /// 従来の手続き構築（Series 9 41mm 相当）。OBJ ロード失敗時のフォールバック。
+    /// 子ノードは `watchBody / watchScreen / crown / bandUpper / bandLower`。
+    public static func buildProcedural() -> SCNNode {
         let watch = SCNNode()
         watch.name = rootNodeName
 
@@ -40,6 +71,115 @@ public enum WatchSceneNodeBuilder {
 
         return watch
     }
+
+    // MARK: - OBJ Loading
+
+    /// バンドル同梱の OBJ をロードし、`rootNodeName` のラッパーノードに包んで返す。
+    /// アセット未配置・ロード失敗・ジオメトリ空のいずれかでも nil を返し、呼び出し側はフォールバックする。
+    /// 各失敗分岐は DEBUG ビルドでログ出力し、フォールバック発動の観測性を確保する。
+    private static func loadOBJModel() -> SCNNode? {
+        guard let url = Bundle.module.url(
+            forResource: "AppleWatch",
+            withExtension: "obj",
+            subdirectory: "MotionReplay"
+        ) else {
+            debugLogFallback(reason: "OBJ resource not found in bundle (Resources/MotionReplay/AppleWatch.obj)")
+            return nil
+        }
+
+        let asset = MDLAsset(url: url)
+        guard asset.count > 0 else {
+            debugLogFallback(reason: "MDLAsset returned empty asset (count=0) for \(url.lastPathComponent)")
+            return nil
+        }
+
+        let scene = SCNScene(mdlAsset: asset)
+        let watch = SCNNode()
+        watch.name = rootNodeName
+
+        // SCNScene の rootNode 直下の子をラッパーに移し替える
+        for child in scene.rootNode.childNodes {
+            child.removeFromParentNode()
+            watch.addChildNode(child)
+        }
+
+        guard !watch.childNodes.isEmpty else {
+            debugLogFallback(reason: "SCNScene from MDLAsset had no child geometry nodes")
+            return nil
+        }
+
+        normalizeLoadedModel(watch)
+        return watch
+    }
+
+    /// DEBUG ビルドのみフォールバック理由を stderr に出力する。本番ビルドでは無音。
+    private static func debugLogFallback(reason: String) {
+        #if DEBUG
+        print("[WatchSceneNodeBuilder] OBJ load failed → procedural fallback. Reason: \(reason)")
+        #endif
+    }
+
+    /// ロード直後のモデルを「原点中心・メートル単位」に正規化する。
+    /// - 想定単位: 1 OBJ unit = 1 mm（Steel_Classic_42 アセットで bbox 実測 30 x 52 x 47 ≒ 30/52/47 mm）
+    /// - 原点: 子ノード全体の bbox 中心に揃える（`pivot` 平行移動で実現）
+    /// - 軸回転は適用しない（親側で吸収）
+    private static func normalizeLoadedModel(_ node: SCNNode) {
+        let (minVec, maxVec) = aggregateBoundingBox(of: node)
+        let center = SCNVector3(
+            (minVec.x + maxVec.x) * 0.5,
+            (minVec.y + maxVec.y) * 0.5,
+            (minVec.z + maxVec.z) * 0.5
+        )
+        node.pivot = SCNMatrix4MakeTranslation(center.x, center.y, center.z)
+
+        let scale = loadedModelScale
+        node.scale = SCNVector3(scale, scale, scale)
+    }
+
+    /// 子孫ノードの geometry を再帰的に集約した bbox を返す。
+    /// SCNNode.boundingBox は実装によって子孫を含まないケースがあるため、ローカル変換を考慮した手計算で求める。
+    private static func aggregateBoundingBox(of root: SCNNode) -> (min: SCNVector3, max: SCNVector3) {
+        var minVec = SCNVector3(Float.greatestFiniteMagnitude, Float.greatestFiniteMagnitude, Float.greatestFiniteMagnitude)
+        var maxVec = SCNVector3(-Float.greatestFiniteMagnitude, -Float.greatestFiniteMagnitude, -Float.greatestFiniteMagnitude)
+        var found = false
+
+        func visit(_ node: SCNNode, parentTransform: SCNMatrix4) {
+            let world = SCNMatrix4Mult(node.transform, parentTransform)
+            if let geometry = node.geometry {
+                let (gMin, gMax) = geometry.boundingBox
+                let corners: [SCNVector3] = [
+                    SCNVector3(gMin.x, gMin.y, gMin.z),
+                    SCNVector3(gMax.x, gMin.y, gMin.z),
+                    SCNVector3(gMin.x, gMax.y, gMin.z),
+                    SCNVector3(gMax.x, gMax.y, gMin.z),
+                    SCNVector3(gMin.x, gMin.y, gMax.z),
+                    SCNVector3(gMax.x, gMin.y, gMax.z),
+                    SCNVector3(gMin.x, gMax.y, gMax.z),
+                    SCNVector3(gMax.x, gMax.y, gMax.z)
+                ]
+                let m = simd_float4x4(world)
+                for c in corners {
+                    let v = m * SIMD4<Float>(c.x, c.y, c.z, 1)
+                    minVec = SCNVector3(min(minVec.x, v.x), min(minVec.y, v.y), min(minVec.z, v.z))
+                    maxVec = SCNVector3(max(maxVec.x, v.x), max(maxVec.y, v.y), max(maxVec.z, v.z))
+                    found = true
+                }
+            }
+            for child in node.childNodes {
+                visit(child, parentTransform: world)
+            }
+        }
+
+        visit(root, parentTransform: SCNMatrix4Identity)
+
+        if !found {
+            return (SCNVector3Zero, SCNVector3Zero)
+        }
+        return (minVec, maxVec)
+    }
+
+    /// 1 OBJ unit = 1 mm 想定の m 換算係数
+    private static let loadedModelScale: Float = 0.001
 
     // MARK: - Dimensions (m)
 

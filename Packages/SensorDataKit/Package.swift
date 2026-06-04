@@ -23,7 +23,13 @@ let package = Package(
     targets: [
         .target(
             name: "SensorDataKit",
-            path: "Sources/SensorDataKit"
+            path: "Sources/SensorDataKit",
+            // VBT Motion Replay 3D アセット（.obj 等）をバンドル同梱。
+            // 実体ファイルは .gitignore でローカル限定だが、process 宣言自体は常に必要。
+            // ファイル未配置時は SwiftPM 警告のみで build は通る（ロード時に fallback 起動）。
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "SensorDataKitTests",

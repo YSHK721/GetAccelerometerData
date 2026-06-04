@@ -594,3 +594,39 @@
 - **対策案**: 外側を `VStack` 2 段構成に変更。1 段目に「タイトル NavigationLink + 共有 Button」を `HStack` で配置、2 段目に `DisclosureGroup` を全幅で配置することで、展開時の追加 NavigationLink は DisclosureGroup の縦方向に正しく展開される。
 - **実施内容**: `VBTSessionListView.sessionRow(_:)` を上記方針で書き換え。共有ボタンと DisclosureGroup を別行に分離。
 - **検証結果**: 未実施（コード変更のみ、ビルド検証は code-review 段階で実施）
+
+---
+
+## ISSUE-034
+
+- **発生日**: 2026-06-04
+- **タイトル**: VBT Motion Replay の 3D Apple Watch を OBJ アセットベースの精密モデルに置換
+- **重大度**: Low（機能拡張、既存挙動への影響なし）
+- **ステータス**: IN_PROGRESS
+- **発生工程**: VBT Motion Replay PoC（Phase 5 視覚品質向上）
+- **該当ファイル**:
+  - `Packages/SensorDataKit/Sources/SensorDataKit/VBT/MotionReplay/WatchSceneNodeBuilder.swift`
+  - `Packages/SensorDataKit/Package.swift`
+  - `Packages/SensorDataKit/Sources/SensorDataKit/Resources/MotionReplay/AppleWatch.obj`（5.2MB, 39549 頂点, .gitignore 管理）
+  - `.gitignore`
+- **概要**: 従来は `SCNBox / SCNPlane / SCNCylinder` の組合せで Apple Watch を簡易模写していたため、リューズ・側面ボタン・バンド金具など細部が表現できなかった。精密 OBJ モデル（Steel_Classic_42 相当, 39549 頂点）をバンドル同梱し、`MDLAsset` 経由でロードする実装に置換する。
+- **対策案**:
+  1. `Resources/MotionReplay/AppleWatch.obj` に OBJ 配置（.gitignore でローカル限定）
+  2. `Package.swift` の target に `resources: [.process("Resources")]` 追加
+  3. `WatchSceneNodeBuilder.build()` を「OBJ ロード → 失敗時は従来手続き構築（`buildProcedural()`）にフォールバック」構造に書き換え
+  4. ロード後の正規化：bbox 中心を原点に揃え、1 OBJ unit = 1mm 想定で 0.001 倍スケール
+- **実施内容**: 上記 1〜4 を実装。子孫ジオメトリの bbox を再帰集計する `aggregateBoundingBox(of:)` ヘルパーを追加し SCNNode.boundingBox の実装依存を回避。
+- **検証結果**:
+  - SensorDataKit (macOS) `swift build` SUCCEEDED
+  - iOS `xcodebuild build` (iPhone 16e, iOS 18.5) BUILD SUCCEEDED
+  - OBJ がアプリ・Watch 両バンドルに同梱されることを確認
+- **既知の制限・残課題**:
+  1. **マテリアル未定義**: `Steel_Classic_42.mtl` が未配置のため、デフォルト白マテリアル相当で表示される可能性。視覚確認後にマテリアル付与方針を判断
+  2. **軸回転未調整**: OBJ の自然向きはアセット依存（バンドが -Z 方向に延伸）。画面法線 +Z / 上端 +Y への回転は実機/シミュレータ視覚確認後にチューニング
+  3. **Watch アプリへの 5.2MB 同梱**: WatchSceneNodeBuilder は iOS のみで使用されるが、SwiftPM の `resources: [.process(...)]` は全プラットフォームにコピーする。watchOS バイナリ +5.2MB のオーバーヘッドが発生（許容範囲内だが本実装格上げ時は `.copy(_:condition:)` で iOS 限定化を検討）
+  4. **ライセンス未確認**: アセット入手元の利用許諾を確認後、配布版での同梱可否を再判断（PoC 段階では .gitignore でローカル限定）
+- **本実装格上げ時のブロッカー昇格条件**（本 ISSUE を PoC → 本実装に格上げする場合、以下を解消するまでマージ不可とする）:
+  - **(A) ライセンス確定**: 商用配布可・再配布可の利用許諾を確認、または同等品質のオリジナル/CC0 モデルに差し替え
+  - **(B) Watch バンドル隔離**: `resources` 宣言を iOS 限定化（`.copy("Resources/MotionReplay/AppleWatch.obj")` + iOS-only sub-target 等）で watchOS バイナリへの不要同梱を解消
+  - **(C) マテリアル整備**: `.mtl` または SCNMaterial を明示付与し、視覚品質を本番水準に
+  - **(D) 軸正規化恒常化**: アセット固有の軸ズレをハードコードせず `MotionReplaySceneView` 側で吸収できる構造に維持
