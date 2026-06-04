@@ -31,8 +31,9 @@ public struct MotionReplayView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // 3D シーン（背景・角丸クリップは外し、周囲ビューと一体化させる）
+            // 高さ固定（旧 320pt）は撤去。VStack 内で残余の垂直スペースを最大限利用する。
             MotionReplaySceneView(orientation: viewModel.state.currentOrientation)
-                .frame(height: 320)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // 再生コントロール行
             HStack(spacing: 12) {
