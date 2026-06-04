@@ -585,24 +585,26 @@
 ## ISSUE-033
 
 - **発生日**: 2026-06-04
+- **解決日**: 2026-06-05
 - **タイトル**: VBT セッション一覧の行が DisclosureGroup 展開時に各 Text を 1 文字幅まで圧縮し縦折り返しを起こす
 - **重大度**: Medium（UI 表示崩壊、機能影響なし）
-- **ステータス**: IN_PROGRESS
+- **ステータス**: RESOLVED
 - **発生工程**: VBT Ground Truth Tool Phase C/D セッション一覧表示
 - **該当ファイル**: `GetAccelerometerData/VideoRecording/Presentation/Views/VBTSessionListView.swift`
 - **概要**: `sessionRow(_:)` が `HStack` 内に「タイトル NavigationLink + DisclosureGroup（Lab 機能 [PoC]） + 共有 Button」を横並びに配置。DisclosureGroup を展開すると内部 NavigationLink Label（「3D リプレイ [PoC]」「ラベリング [Skin]」）が行幅を奪い合い、各 Text が minWidth ≒ 1 文字幅まで圧縮されて 1 文字ごとに縦折り返しされる。
 - **対策案**: 外側を `VStack` 2 段構成に変更。1 段目に「タイトル NavigationLink + 共有 Button」を `HStack` で配置、2 段目に `DisclosureGroup` を全幅で配置することで、展開時の追加 NavigationLink は DisclosureGroup の縦方向に正しく展開される。
-- **実施内容**: `VBTSessionListView.sessionRow(_:)` を上記方針で書き換え。共有ボタンと DisclosureGroup を別行に分離。
-- **検証結果**: 未実施（コード変更のみ、ビルド検証は code-review 段階で実施）
+- **実施内容**: `VBTSessionListView.sessionRow(_:)` を上記方針で書き換え。共有ボタンと DisclosureGroup を別行に分離。コミット `2b66af6`。
+- **検証結果**: iOS BUILD SUCCEEDED（code-review-executor 確認済）+ 実機/シミュレータでの目視確認完了（横圧縮による文字縦折り返し解消、DisclosureGroup 展開時にも各 Text が通常表示）。
 
 ---
 
 ## ISSUE-034
 
 - **発生日**: 2026-06-04
+- **解決日**: 2026-06-05
 - **タイトル**: VBT Motion Replay の 3D Apple Watch を OBJ アセットベースの精密モデルに置換
 - **重大度**: Low（機能拡張、既存挙動への影響なし）
-- **ステータス**: IN_PROGRESS
+- **ステータス**: RESOLVED（PoC 完了 / 本実装格上げは別途ブロッカー条件 A-D 充足が必要）
 - **発生工程**: VBT Motion Replay PoC（Phase 5 視覚品質向上）
 - **該当ファイル**:
   - `Packages/SensorDataKit/Sources/SensorDataKit/VBT/MotionReplay/WatchSceneNodeBuilder.swift`
@@ -632,6 +634,7 @@
   - **(D) 軸正規化恒常化**: アセット固有の軸ズレをハードコードせず `MotionReplaySceneView` 側で吸収できる構造に維持
 - **追加修正 1（2026-06-04）**: 初回コミット `0cda13f` で `Bundle.module.url(forResource:withExtension:subdirectory:)` の `subdirectory: "MotionReplay"` 指定により実行時にリソースが見つからず常にフォールバック（procedural）にフォールバックしていた。原因は SwiftPM の `.process("Resources")` がディレクトリ構造をフラット化しバンドル直下に配置する仕様。`subdirectory:` 指定を削除して修正。iOS BUILD SUCCEEDED で再ビルド確認。
 - **追加修正 2（2026-06-04 / 案 B 非対称軸検出方式）**: バンドが -Z 方向に長く延びる Steel_Classic_42 系統で bbox 中心（≒ アセット全体の幾何中心）を pivot に設定すると、本体中心からの ~19mm ズレにより姿勢変化時に本体が振り子状の円弧運動を起こしていた。対策として、各軸の非対称度 `asymmetryRatio = |center / extent|` を算出し、最も非対称な軸が `threshold = 0.10` を超える場合のみその軸の pivot を 0 に強制する純粋関数 `WatchModelPivot.selectBodyCenterPivot(bboxMin:bboxMax:asymmetryThreshold:)` を新規 `WatchModelPivot.swift` に切り出し、`normalizeLoadedModel(_:)` から呼び出す構成に変更。Steel_Classic_42 想定値（X=[-14.36, 15.52], Y=[-26.13, 26.22], Z=[-42.73, 4.20]）で Z 軸 ratio≈0.41 が選定され pivot.z=0 に強制、X/Y は対称（ratio≈0.019 / 0.0009）のため bbox 中心維持となる。しきい値 0.10 は「片側寸法が反対側より 22% 以上長い軸を非対称と判定」に相当し、本体寸法（~30mm x ~50mm）対バンド突出（最大 42mm）を確実に分離できる値として選定。`extent[axis] = 0` の退化ケースは ratio=0 扱いで NaN を回避。関数は SIMD3<Float> のみに依存し SceneKit 非依存のため macOS テスト実行可能。`WatchModelPivotTests` で 5 ケース（Steel_Classic_42 想定値 / 全軸対称 / X 軸のみ非対称 / 境界値（ratio==threshold は維持）/ 0 寸法ガード）を網羅。SensorDataKit 207/207 PASS、iOS BUILD SUCCEEDED。
+- **目視確認結果（2026-06-05）**: 実機で「本体がその場で回転」する挙動を確認。クォータニオン値の視覚検証用途として機能していることを確認。フレーム外し（角丸クリップ・黒背景撤去）、ワイヤーフレーム表示、サイズ調整（FOV 20°、targetMaxExtentMeters 0.35）も併せて目視確認済。PoC として本 ISSUE を RESOLVED に変更。本実装格上げ時は上記ブロッカー条件 (A)〜(D) の充足を別タスクで実施。
 
 ---
 

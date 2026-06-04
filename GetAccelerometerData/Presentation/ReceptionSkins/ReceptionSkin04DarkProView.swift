@@ -78,11 +78,8 @@ struct ReceptionSkin04DarkProView: View {
                     : .easeInOut(duration: 0.9).repeatForever(autoreverses: true),
                 value: blink
             )
-            .onAppear {
-                if !sessionManager.isSessionReachable {
-                    blink.toggle()
-                }
-            }
+            // 親 View の onAppear で `blink = true` 設定済。
+            // ここで重ねて toggle すると false に戻りアニメが二重起動するため、LED 側 onAppear は撤去。
     }
 
     private var fileLogSection: some View {
