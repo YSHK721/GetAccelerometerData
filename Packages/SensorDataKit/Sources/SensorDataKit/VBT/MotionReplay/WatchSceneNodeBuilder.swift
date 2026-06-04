@@ -123,20 +123,24 @@ public enum WatchSceneNodeBuilder {
         #endif
     }
 
-    /// ロード直後のモデルを「原点中心・メートル単位」に正規化する。
-    /// - 原点: 子ノード全体の bbox 中心に揃える（`pivot` 平行移動で実現）
+    /// ロード直後のモデルを「本体中心・メートル単位」に正規化する。
+    /// - 原点: `WatchModelPivot.selectBodyCenterPivot` で本体中心を近似（案 B 非対称軸検出方式）。
+    ///   bbox 中心ではなく「最も非対称な軸だけ pivot=0 に強制」することで、バンドが片側に
+    ///   長く延びるアセット（Steel_Classic_42 等）でも本体中心を回転中心にできる（ISSUE-034）。
     /// - スケール: bbox の最大辺長が `targetMaxExtentMeters` になるよう動的に算出（procedural と
     ///   同等の画面占有サイズを保つことでカメラ・ライト構成の調整を不要にする）
     /// - 軸回転は適用しない（親側で吸収）
     /// - マテリアル: ワイヤーフレーム表示に統一（参照画像の青ワイヤー外観に合わせる）
     private static func normalizeLoadedModel(_ node: SCNNode) {
         let (minVec, maxVec) = aggregateBoundingBox(of: node)
-        let center = SCNVector3(
-            (minVec.x + maxVec.x) * 0.5,
-            (minVec.y + maxVec.y) * 0.5,
-            (minVec.z + maxVec.z) * 0.5
+        let bboxMin = SIMD3<Float>(minVec.x, minVec.y, minVec.z)
+        let bboxMax = SIMD3<Float>(maxVec.x, maxVec.y, maxVec.z)
+        let pivot = WatchModelPivot.selectBodyCenterPivot(
+            bboxMin: bboxMin,
+            bboxMax: bboxMax,
+            asymmetryThreshold: bodyCenterAsymmetryThreshold
         )
-        node.pivot = SCNMatrix4MakeTranslation(center.x, center.y, center.z)
+        node.pivot = SCNMatrix4MakeTranslation(pivot.x, pivot.y, pivot.z)
 
         let maxExtent = max(
             maxVec.x - minVec.x,
@@ -148,6 +152,10 @@ public enum WatchSceneNodeBuilder {
 
         applyWireframeMaterial(to: node)
     }
+
+    /// `WatchModelPivot.selectBodyCenterPivot` に渡す非対称判定しきい値。
+    /// 0.10 = 「片側寸法が反対側より 22% 以上長い軸を非対称と判定」に相当（ISSUE-034 参照）。
+    private static let bodyCenterAsymmetryThreshold: Float = 0.10
 
     /// 子孫すべてのジオメトリにワイヤーフレーム表示マテリアルを適用し、
     /// `wireframeTriangleStride > 1` の場合は三角形をサブサンプリングして線量を減らす。
