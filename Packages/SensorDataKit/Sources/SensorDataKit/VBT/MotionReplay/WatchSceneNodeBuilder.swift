@@ -149,7 +149,8 @@ public enum WatchSceneNodeBuilder {
         applyWireframeMaterial(to: node)
     }
 
-    /// 子孫すべてのジオメトリにワイヤーフレーム表示マテリアルを適用する。
+    /// 子孫すべてのジオメトリにワイヤーフレーム表示マテリアルを適用し、
+    /// `wireframeTriangleStride > 1` の場合は三角形をサブサンプリングして線量を減らす。
     /// 既存マテリアルがあれば `fillMode = .lines` を上書きし、`diffuse` を青に統一する。
     /// マテリアル未定義のジオメトリには新規 SCNMaterial を生成して付与する。
     private static func applyWireframeMaterial(to node: SCNNode) {
@@ -164,6 +165,9 @@ public enum WatchSceneNodeBuilder {
                     material.isDoubleSided = true
                 }
             }
+            if wireframeTriangleStride > 1 {
+                node.geometry = decimatedGeometry(geometry, triangleStride: wireframeTriangleStride)
+            }
         }
         for child in node.childNodes {
             applyWireframeMaterial(to: child)
@@ -177,6 +181,37 @@ public enum WatchSceneNodeBuilder {
         material.lightingModel = .constant
         material.isDoubleSided = true
         return material
+    }
+
+    /// 三角形を `triangleStride` 個おきに 1 個ずつ残した SCNGeometry を生成する。
+    /// 頂点ソース（位置・法線・UV）は維持し、SCNGeometryElement のインデックスバッファのみ間引く。
+    /// 三角形以外のプリミティブ（line / point 等）はそのまま温存する。
+    private static func decimatedGeometry(_ source: SCNGeometry, triangleStride: Int) -> SCNGeometry {
+        let newElements: [SCNGeometryElement] = source.elements.map { element in
+            guard element.primitiveType == .triangles, element.primitiveCount > 0 else {
+                return element
+            }
+            let bytesPerIndex = element.bytesPerIndex
+            let bytesPerTriangle = bytesPerIndex * 3
+            let srcData = element.data
+            var dstData = Data()
+            dstData.reserveCapacity((element.primitiveCount / triangleStride + 1) * bytesPerTriangle)
+            for triIdx in Swift.stride(from: 0, to: element.primitiveCount, by: triangleStride) {
+                let offset = triIdx * bytesPerTriangle
+                guard offset + bytesPerTriangle <= srcData.count else { break }
+                dstData.append(srcData.subdata(in: offset..<(offset + bytesPerTriangle)))
+            }
+            return SCNGeometryElement(
+                data: dstData,
+                primitiveType: .triangles,
+                primitiveCount: dstData.count / bytesPerTriangle,
+                bytesPerIndex: bytesPerIndex
+            )
+        }
+        let result = SCNGeometry(sources: source.sources, elements: newElements)
+        result.materials = source.materials
+        result.name = source.name
+        return result
     }
 
     /// 子孫ノードの geometry を再帰的に集約した bbox を返す。
@@ -223,13 +258,22 @@ public enum WatchSceneNodeBuilder {
 
     /// ロード後モデルの目標最大辺長（m）。procedural fallback の総 Y 寸法 (本体+バンド) と概ね同等。
     /// 動的スケール算出に失敗した場合のみ `loadedModelFallbackScale` が使われる。
-    private static let targetMaxExtentMeters: Float = 0.15
+    private static let targetMaxExtentMeters: Float = 0.50
 
     /// bbox 計測失敗時のフォールバックスケール（1 OBJ unit = 1 mm 想定）
     private static let loadedModelFallbackScale: Float = 0.001
 
     /// ワイヤーフレーム表示色（参照画像準拠の青）
     private static let wireframeColor = UIColor.systemBlue
+
+    /// ワイヤーフレーム表示時の三角形サブサンプリングストライド（線量調整ノブ）。
+    /// - 1 = 全三角形を描画（OBJ のフル密度, 約 39549 三角形分の辺）
+    /// - 2 = 半分の三角形のみ描画（線量約 50%）
+    /// - 3 = 三分の一（線量約 33%）
+    /// - N = 1/N（線量約 100/N %）
+    /// 値を大きくするほど画面がすっきりするが、シルエットの輪郭精度が落ちる。
+    /// 線量を「増やす」には OBJ 自体のポリゴン分割が必要（本パラメータでは増やせない）。
+    private static let wireframeTriangleStride: Int = 4
 
     // MARK: - Dimensions (m)
 
