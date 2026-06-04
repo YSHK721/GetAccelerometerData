@@ -579,3 +579,18 @@
   7. `loadDataFromCSV` ヘルパーの `completion` を `@escaping @Sendable @MainActor` に変更し Task 内送信を安全化
 - **検証結果**: `xcodebuild -only-testing:GetAccelerometerDataTests/AccelerometerChartViewTests test` TEST SUCCEEDED、`xcodebuild -only-testing:GetAccelerometerDataTests test`（iOS テスト target 全体）TEST SUCCEEDED。SwiftPM 202/202 維持。`.todo` から `.swift` に復元。
 - **副次効果**: テストクラスは nonisolated を維持できたため、将来テスト追加で非 MainActor サービスを呼ぶ際の波及（`await` 連鎖 / sending エラー）リスクを排除した。プロジェクト規約（ISSUE-018 で確立）を遵守。
+
+---
+
+## ISSUE-033
+
+- **発生日**: 2026-06-04
+- **タイトル**: VBT セッション一覧の行が DisclosureGroup 展開時に各 Text を 1 文字幅まで圧縮し縦折り返しを起こす
+- **重大度**: Medium（UI 表示崩壊、機能影響なし）
+- **ステータス**: IN_PROGRESS
+- **発生工程**: VBT Ground Truth Tool Phase C/D セッション一覧表示
+- **該当ファイル**: `GetAccelerometerData/VideoRecording/Presentation/Views/VBTSessionListView.swift`
+- **概要**: `sessionRow(_:)` が `HStack` 内に「タイトル NavigationLink + DisclosureGroup（Lab 機能 [PoC]） + 共有 Button」を横並びに配置。DisclosureGroup を展開すると内部 NavigationLink Label（「3D リプレイ [PoC]」「ラベリング [Skin]」）が行幅を奪い合い、各 Text が minWidth ≒ 1 文字幅まで圧縮されて 1 文字ごとに縦折り返しされる。
+- **対策案**: 外側を `VStack` 2 段構成に変更。1 段目に「タイトル NavigationLink + 共有 Button」を `HStack` で配置、2 段目に `DisclosureGroup` を全幅で配置することで、展開時の追加 NavigationLink は DisclosureGroup の縦方向に正しく展開される。
+- **実施内容**: `VBTSessionListView.sessionRow(_:)` を上記方針で書き換え。共有ボタンと DisclosureGroup を別行に分離。
+- **検証結果**: 未実施（コード変更のみ、ビルド検証は code-review 段階で実施）

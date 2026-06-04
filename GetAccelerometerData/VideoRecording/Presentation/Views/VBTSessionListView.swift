@@ -57,31 +57,52 @@ struct VBTSessionListView: View {
     }
 
     // MARK: - Row
+    // レイアウト方針：
+    //   外側を VStack 2 段構成にする。1 段目は「タイトル＋メタ情報＋共有ボタン」を
+    //   HStack で横並びにする。2 段目に DisclosureGroup を全幅で配置する。
+    //   旧実装では 3 要素（NavigationLink / DisclosureGroup / 共有 Button）を 1 つの
+    //   HStack に詰めていたため、DisclosureGroup 展開時に内部 NavigationLink Label が
+    //   行幅を奪い合い、各 Text が 1 文字幅まで圧縮されて縦折り返しを起こしていた。
     @ViewBuilder
     private func sessionRow(_ row: VBTSessionListViewModel.Row) -> some View {
-        HStack(spacing: 8) {
-            NavigationLink(destination: VBTLabelingView(
-                sessionId: row.entry.folderName,
-                folderURL: row.folderURL
-            )) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(row.entry.folderName)
-                        .font(.headline)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    HStack(spacing: 12) {
-                        Text("種目: \(row.entry.exercise)")
-                        Text("重量: \(formatWeight(row.entry.weightKg))kg")
-                        Text("Set: \(row.entry.setIndex)")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    if !row.isExportable {
-                        Text("共有不可: ラベリング未完了")
-                            .font(.caption2)
-                            .foregroundStyle(.orange)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                NavigationLink(destination: VBTLabelingView(
+                    sessionId: row.entry.folderName,
+                    folderURL: row.folderURL
+                )) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(row.entry.folderName)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        HStack(spacing: 12) {
+                            Text("種目: \(row.entry.exercise)")
+                            Text("重量: \(formatWeight(row.entry.weightKg))kg")
+                            Text("Set: \(row.entry.setIndex)")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        if !row.isExportable {
+                            Text("共有不可: ラベリング未完了")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                        }
                     }
                 }
+
+                // Phase D: 共有ボタン
+                Button {
+                    shareSession(row)
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.title3)
+                        .padding(.horizontal, 4)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!row.isExportable)
+                .foregroundStyle(row.isExportable ? Color.blue : Color.gray)
+                .accessibilityLabel(row.isExportable ? "共有" : "共有不可（ラベリング未完了）")
             }
 
             // PoC 系導線を 1 つの折りたたみグループに集約
@@ -102,19 +123,6 @@ struct VBTSessionListView: View {
             } label: {
                 Text("Lab 機能 [PoC]").font(.caption).foregroundStyle(.secondary)
             }
-
-            // Phase D: 共有ボタン
-            Button {
-                shareSession(row)
-            } label: {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.title3)
-                    .padding(.horizontal, 4)
-            }
-            .buttonStyle(.borderless)
-            .disabled(!row.isExportable)
-            .foregroundStyle(row.isExportable ? Color.blue : Color.gray)
-            .accessibilityLabel(row.isExportable ? "共有" : "共有不可（ラベリング未完了）")
         }
     }
 
