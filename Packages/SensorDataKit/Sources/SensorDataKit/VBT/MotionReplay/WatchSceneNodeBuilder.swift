@@ -124,9 +124,11 @@ public enum WatchSceneNodeBuilder {
     }
 
     /// ロード直後のモデルを「原点中心・メートル単位」に正規化する。
-    /// - 想定単位: 1 OBJ unit = 1 mm（Steel_Classic_42 アセットで bbox 実測 30 x 52 x 47 ≒ 30/52/47 mm）
     /// - 原点: 子ノード全体の bbox 中心に揃える（`pivot` 平行移動で実現）
+    /// - スケール: bbox の最大辺長が `targetMaxExtentMeters` になるよう動的に算出（procedural と
+    ///   同等の画面占有サイズを保つことでカメラ・ライト構成の調整を不要にする）
     /// - 軸回転は適用しない（親側で吸収）
+    /// - マテリアル: ワイヤーフレーム表示に統一（参照画像の青ワイヤー外観に合わせる）
     private static func normalizeLoadedModel(_ node: SCNNode) {
         let (minVec, maxVec) = aggregateBoundingBox(of: node)
         let center = SCNVector3(
@@ -136,8 +138,45 @@ public enum WatchSceneNodeBuilder {
         )
         node.pivot = SCNMatrix4MakeTranslation(center.x, center.y, center.z)
 
-        let scale = loadedModelScale
+        let maxExtent = max(
+            maxVec.x - minVec.x,
+            maxVec.y - minVec.y,
+            maxVec.z - minVec.z
+        )
+        let scale: Float = maxExtent > 0 ? (targetMaxExtentMeters / maxExtent) : loadedModelFallbackScale
         node.scale = SCNVector3(scale, scale, scale)
+
+        applyWireframeMaterial(to: node)
+    }
+
+    /// 子孫すべてのジオメトリにワイヤーフレーム表示マテリアルを適用する。
+    /// 既存マテリアルがあれば `fillMode = .lines` を上書きし、`diffuse` を青に統一する。
+    /// マテリアル未定義のジオメトリには新規 SCNMaterial を生成して付与する。
+    private static func applyWireframeMaterial(to node: SCNNode) {
+        if let geometry = node.geometry {
+            if geometry.materials.isEmpty {
+                geometry.materials = [makeWireframeMaterial()]
+            } else {
+                for material in geometry.materials {
+                    material.fillMode = .lines
+                    material.diffuse.contents = wireframeColor
+                    material.lightingModel = .constant
+                    material.isDoubleSided = true
+                }
+            }
+        }
+        for child in node.childNodes {
+            applyWireframeMaterial(to: child)
+        }
+    }
+
+    private static func makeWireframeMaterial() -> SCNMaterial {
+        let material = SCNMaterial()
+        material.fillMode = .lines
+        material.diffuse.contents = wireframeColor
+        material.lightingModel = .constant
+        material.isDoubleSided = true
+        return material
     }
 
     /// 子孫ノードの geometry を再帰的に集約した bbox を返す。
@@ -182,8 +221,15 @@ public enum WatchSceneNodeBuilder {
         return (minVec, maxVec)
     }
 
-    /// 1 OBJ unit = 1 mm 想定の m 換算係数
-    private static let loadedModelScale: Float = 0.001
+    /// ロード後モデルの目標最大辺長（m）。procedural fallback の総 Y 寸法 (本体+バンド) と概ね同等。
+    /// 動的スケール算出に失敗した場合のみ `loadedModelFallbackScale` が使われる。
+    private static let targetMaxExtentMeters: Float = 0.15
+
+    /// bbox 計測失敗時のフォールバックスケール（1 OBJ unit = 1 mm 想定）
+    private static let loadedModelFallbackScale: Float = 0.001
+
+    /// ワイヤーフレーム表示色（参照画像準拠の青）
+    private static let wireframeColor = UIColor.systemBlue
 
     // MARK: - Dimensions (m)
 
