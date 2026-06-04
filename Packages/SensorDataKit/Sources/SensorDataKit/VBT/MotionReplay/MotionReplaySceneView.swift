@@ -108,7 +108,11 @@ public struct MotionReplaySceneView: UIViewRepresentable {
 
     private func makeCameraNode() -> SCNNode {
         let camera = SCNCamera()
-        camera.fieldOfView = 60
+        // 望遠寄り FOV を採用してモデルを画面いっぱいに見せる。
+        // パース歪み（湾曲）を抑制したまま視覚的拡大を得る常套手段。
+        // FOV 60° 時の可視高さ = 1.155 * z に対し、FOV 30° では 0.536 * z（約 46%）となり
+        // 同じカメラ距離でもモデルが約 2 倍の画面占有率になる。
+        camera.fieldOfView = 30
         // 近接面・遠面を明示的に設定（既定値で Watch サイズ 0.04m がクリップされる可能性を排除）
         camera.zNear = 0.001
         camera.zFar = 10
@@ -117,10 +121,9 @@ public struct MotionReplaySceneView: UIViewRepresentable {
         node.name = "camera"
         node.camera = camera
         // カメラ距離はモデル最大辺長に比例（係数 2.6）で算出。
-        // 旧仕様の固定 z=0.4 / モデル 0.155m の比 (≒2.58) を踏襲。
-        // FOV 60° では可視高さ = 2 * z * tan(30°) ≈ 1.155 * z となり、
-        // 比率 2.6 で可視高さ = モデル ×3.0 となるため左右上下に十分な余白を確保しつつ
-        // モデルがカメラ内側に踏み込まないため魚眼ライクな湾曲が発生しない。
+        // パース歪み（魚眼ライクな湾曲）を防ぐためモデル外周に十分な距離を保つ。
+        // FOV 30° では可視高さ = 2 * z * tan(15°) ≈ 0.536 * z となり、
+        // 比率 2.6 で可視高さ = モデル ×1.39 → モデルが画面の約 72% を占める。
         let cameraDistance = WatchSceneNodeBuilder.targetMaxExtentMeters * 2.6
         node.position = SCNVector3(0, 0, cameraDistance)
         node.look(at: SCNVector3(0, 0, 0))
