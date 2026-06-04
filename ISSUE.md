@@ -632,3 +632,34 @@
   - **(D) 軸正規化恒常化**: アセット固有の軸ズレをハードコードせず `MotionReplaySceneView` 側で吸収できる構造に維持
 - **追加修正 1（2026-06-04）**: 初回コミット `0cda13f` で `Bundle.module.url(forResource:withExtension:subdirectory:)` の `subdirectory: "MotionReplay"` 指定により実行時にリソースが見つからず常にフォールバック（procedural）にフォールバックしていた。原因は SwiftPM の `.process("Resources")` がディレクトリ構造をフラット化しバンドル直下に配置する仕様。`subdirectory:` 指定を削除して修正。iOS BUILD SUCCEEDED で再ビルド確認。
 - **追加修正 2（2026-06-04 / 案 B 非対称軸検出方式）**: バンドが -Z 方向に長く延びる Steel_Classic_42 系統で bbox 中心（≒ アセット全体の幾何中心）を pivot に設定すると、本体中心からの ~19mm ズレにより姿勢変化時に本体が振り子状の円弧運動を起こしていた。対策として、各軸の非対称度 `asymmetryRatio = |center / extent|` を算出し、最も非対称な軸が `threshold = 0.10` を超える場合のみその軸の pivot を 0 に強制する純粋関数 `WatchModelPivot.selectBodyCenterPivot(bboxMin:bboxMax:asymmetryThreshold:)` を新規 `WatchModelPivot.swift` に切り出し、`normalizeLoadedModel(_:)` から呼び出す構成に変更。Steel_Classic_42 想定値（X=[-14.36, 15.52], Y=[-26.13, 26.22], Z=[-42.73, 4.20]）で Z 軸 ratio≈0.41 が選定され pivot.z=0 に強制、X/Y は対称（ratio≈0.019 / 0.0009）のため bbox 中心維持となる。しきい値 0.10 は「片側寸法が反対側より 22% 以上長い軸を非対称と判定」に相当し、本体寸法（~30mm x ~50mm）対バンド突出（最大 42mm）を確実に分離できる値として選定。`extent[axis] = 0` の退化ケースは ratio=0 扱いで NaN を回避。関数は SIMD3<Float> のみに依存し SceneKit 非依存のため macOS テスト実行可能。`WatchModelPivotTests` で 5 ケース（Steel_Classic_42 想定値 / 全軸対称 / X 軸のみ非対称 / 境界値（ratio==threshold は維持）/ 0 寸法ガード）を網羅。SensorDataKit 207/207 PASS、iOS BUILD SUCCEEDED。
+
+---
+
+## ISSUE-035
+
+- **発生日**: 2026-06-04
+- **タイトル**: 加速度データ受信ビューの 5 スキン化（デザインバリエーション）
+- **重大度**: Low（UI 試行用機能追加、既存挙動への影響なし）
+- **ステータス**: RESOLVED
+- **発生工程**: メイン画面 UI デザイン試行
+- **該当ファイル**:
+  - `GetAccelerometerData/Presentation/ReceptionSkins/ReceptionSkin01ClassicRefinedView.swift`（新規）
+  - `GetAccelerometerData/Presentation/ReceptionSkins/ReceptionSkin02CompactListView.swift`（新規）
+  - `GetAccelerometerData/Presentation/ReceptionSkins/ReceptionSkin03DashboardView.swift`（新規）
+  - `GetAccelerometerData/Presentation/ReceptionSkins/ReceptionSkin04DarkProView.swift`（新規）
+  - `GetAccelerometerData/Presentation/ReceptionSkins/ReceptionSkin05CardBasedView.swift`（新規）
+  - `GetAccelerometerData/Presentation/ReceptionSkinnedView.swift`（新規、5 スキン切替コンテナ）
+  - `GetAccelerometerData/ContentView.swift`（修正、NavigationLink 1 件追加のみ）
+- **概要**: 既存 `ContentView` は加速度データ受信の中心 UI だがデザインが固定的で複数の見せ方を試行できない。ISSUE-030 で実施した VBT Labeling 5 スキン化と同じ方式（共有 ViewModel + Segmented Picker 切替）を「加速度データ受信」ビューに適用。
+- **対策案**:
+  1. `Presentation/ReceptionSkins/` 新規ディレクトリに 5 スキン View を配置（Classic Refined / Compact List / Dashboard / Dark Pro / Card-Based）
+  2. `Presentation/ReceptionSkinnedView.swift` で `@StateObject private var sessionManager = WatchSessionManager()` を保持し、各スキンへ `@ObservedObject` で渡して切替時の再初期化を防止
+  3. `ContentView.swift` の `VBTSessionListEntryLink()` 直後に NavigationLink を 1 件のみ追加（既存 UI / State / ロジックは無変更）
+- **実施内容**: 上記 1〜3 を実装。新規 6 ファイル + 修正 1 ファイル（ContentView）+ 修正 1 ファイル（本 ISSUE.md）の計 8 ファイルに変更を局所化。
+- **検証結果**:
+  - iOS `xcodebuild build` (iPhone 16e, iOS 18.5) BUILD SUCCEEDED
+  - SensorDataKit `swift test` 207/207 PASS（既存テスト保護）
+  - git diff --stat で修正範囲が指定 8 ファイルに閉じていることを確認
+- **既知の制限・残課題**:
+  1. **スキンレベルの自動 UI テスト未実装**: 実機状態依存（`WatchSessionManager` の WCSession ライフサイクル）のため本タスクのスコープ外。各スキンは SwiftUI Preview で目視確認可能
+  2. **`@MainActor` 制約**: `WatchSessionManager` は `@MainActor` 修飾済のため、各スキン View は MainActor 上でのみアクセス可能（SwiftUI View はデフォルト MainActor のため通常使用では問題なし）

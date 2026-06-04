@@ -103,7 +103,20 @@ struct ContentView: View {
 
             // VBT Ground Truth Tool Phase C 入口（仕様書 §10 ラベリング）
             VBTSessionListEntryLink()
-            
+
+            // 加速度データ受信スキン比較入口（ISSUE-035 / feat/reception-skins）
+            NavigationLink(destination: ReceptionSkinnedView()) {
+                Label("加速度データ受信 [Skin]", systemImage: "paintpalette")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.indigo)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .padding(.horizontal)
+
             // 明示的なナビゲーションリンク
             .navigationDestination(isPresented: $isNavigatingToChart) {
                 if let url = selectedFileURL {
